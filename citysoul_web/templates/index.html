@@ -9,9 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
-
+    
     <style>
         :root { 
             --bg: #020617; --surface: #0f172a; --glass: rgba(30,41,59,0.9);
@@ -147,8 +145,11 @@
             <h2>Add Spot</h2>
             <input id="aName" placeholder="Name" class="input-field">
             <input id="aAddr" placeholder="Address" class="input-field">
-            <button onclick="doGeo()" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer;">Find GPS</button>
+            
+            <button onclick="doGeo()" id="btnGeo" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer;">Find GPS</button>
+            
             <input type="hidden" id="aLat"><input type="hidden" id="aLon">
+            
             <select id="aType" class="input-field" style="background:#0f172a;">
                 <option value="places">Place</option>
                 <option value="food">Food</option>
@@ -156,7 +157,8 @@
                 <option value="hotels">Hotel</option>
             </select>
             <input type="file" id="aFile" class="input-field" onchange="readF()">
-            <button onclick="subPlace(this)" class="action-btn">SUBMIT</button>
+            
+            <button id="subBtn" onclick="subPlace(this)" class="action-btn">SUBMIT</button>
         </div>
     </div>
 
@@ -198,30 +200,145 @@
     </div>
 
     <script>
+        // --- GLOBAL VARIABLES ---
         let isDark = true;
+        let curCity="Bilaspur";
+        let curType="places";
+        let token=localStorage.getItem("tok");
+        let user=localStorage.getItem("usr");
+        let userRole=localStorage.getItem("role");
+        let lat=0;
+        let lon=0;
+        let map;
+        let routePolyline;
+        let upImg="";
+        let editImg="";
+        let isRegister=false;
+        let currentItems=[];
+
+        // --- CRITICAL FUNCTIONS (MOVED TO TOP TO PREVENT ERRORS) ---
+        
+        // 1. GPS FUNCTION
+        function doGeo() {
+            const btn = document.getElementById('btnGeo');
+            if(btn) btn.innerText = "Locating...";
+            if(!navigator.geolocation) { alert("GPS not supported"); return; }
+            
+            navigator.geolocation.getCurrentPosition(
+                (p) => {
+                    document.getElementById('aLat').value = p.coords.latitude;
+                    document.getElementById('aLon').value = p.coords.longitude;
+                    if(btn) btn.innerText = "✅ GPS Found";
+                    alert("Location Saved!");
+                },
+                (e) => {
+                    alert("GPS Error: " + e.message);
+                    if(btn) btn.innerText = "Find GPS";
+                }
+            );
+        }
+
+        // 2. SUBMIT PLACE FUNCTION (The one that was crashing)
+        async function subPlace(btn) {
+            // Safety check: if btn is null (unlikely with 'this'), try finding by ID
+            if(!btn) btn = document.getElementById('subBtn');
+
+            const name = document.getElementById('aName').value;
+            const type = document.getElementById('aType').value;
+            const gLat = document.getElementById('aLat').value;
+            const gLon = document.getElementById('aLon').value;
+
+            if(!name) return alert("Please enter a name");
+
+            // SAFE UI UPDATE
+            if(btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ SAVING...";
+            }
+
+            try {
+                // Determine Coordinates
+                let finalLat = gLat || 0;
+                let finalLon = gLon || 0;
+
+                // If no GPS, try server geocoding
+                if(finalLat == 0) {
+                    try {
+                        const geoRes = await fetch('/geocode', {
+                            method:'POST', 
+                            body:new URLSearchParams({address: name + ", " + curCity})
+                        });
+                        const geoData = await geoRes.json();
+                        if(geoData.status === 'success') {
+                            finalLat = geoData.lat;
+                            finalLon = geoData.lon;
+                        } else {
+                            finalLat = lat; // Fallback to user location
+                            finalLon = lon;
+                        }
+                    } catch(e) { console.log("Geocode skipped"); }
+                }
+
+                // Send Data
+                const response = await fetch('/add_place', {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        city: curCity,
+                        category_type: type,
+                        name: name,
+                        desc: "User Added via Web",
+                        img_url: upImg || "", 
+                        budget: "N/A",
+                        lat: finalLat,
+                        lon: finalLon,
+                        user: user || "Guest"
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("✅ Success: Place Added!");
+                    document.getElementById('addModal').style.display='none'; 
+                    fetchData();
+                } else {
+                    alert("❌ Server Error: " + data.message);
+                }
+
+            } catch (error) {
+                alert("❌ Error: " + error.message);
+            } finally {
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerText = "SUBMIT";
+                }
+            }
+        }
+
+        // --- REST OF THE LOGIC ---
+
+        function ui(){ const b=document.getElementById('authBtn'); b.innerText = token ? user : "Login"; if(token) b.style.color = "var(--accent)"; } ui();
+
+        navigator.geolocation.getCurrentPosition(p=>{ lat=p.coords.latitude; lon=p.coords.longitude; fetchData(); }, ()=>fetchData());
+
         function toggleTheme() {
             isDark = !isDark;
             document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
             document.getElementById('themeBtn').innerText = isDark ? '☀' : '☾';
         }
 
-        let curCity="Bilaspur", curType="places", token=localStorage.getItem("tok"), user=localStorage.getItem("usr"), userRole=localStorage.getItem("role"), lat=0, lon=0, map, routePolyline, upImg="", editImg="", isRegister=false, currentItems=[];
-
-        function ui(){ const b=document.getElementById('authBtn'); b.innerText = token ? user : "Login"; if(token) b.style.color = "var(--accent)"; } ui();
-
-        navigator.geolocation.getCurrentPosition(p=>{ lat=p.coords.latitude; lon=p.coords.longitude; fetchData(); }, ()=>fetchData());
-
         async function fetchData() {
             const city = document.getElementById('cityInput').value; curCity=city;
             document.getElementById('heroCity').innerText = city.toUpperCase();
             
-            Promise.all([
-                fetch('/get_weather', {method:'POST', body:new URLSearchParams({city:city})}).then(r=>r.json()),
-                fetch('/discover_places', {method:'POST', body:new URLSearchParams({city:city, type:curType, user_lat:lat, user_lon:lon})}).then(r=>r.json())
-            ]).then(([w, d]) => {
+            try {
+                const [w, d] = await Promise.all([
+                    fetch('/get_weather', {method:'POST', body:new URLSearchParams({city:city})}).then(r=>r.json()),
+                    fetch('/discover_places', {method:'POST', body:new URLSearchParams({city:city, type:curType, user_lat:lat, user_lon:lon})}).then(r=>r.json())
+                ]);
                 if(w.status==='success') document.getElementById('weather').innerText = `${w.temp}°C`;
                 render(d.items);
-            });
+            } catch(e) { console.error(e); }
         }
 
         function render(items) {
@@ -256,7 +373,6 @@
             VanillaTilt.init(document.querySelectorAll(".card"));
         }
 
-        // --- ADMIN IMAGE EDIT ---
         function openEditImage(id, name) {
             document.getElementById('editId').value = id;
             document.getElementById('editName').innerText = "Editing: " + name;
@@ -272,7 +388,6 @@
             fetchData();
         }
 
-        // --- AUTH ---
         function toggleAuthMode() {
             isRegister = !isRegister;
             const title = document.getElementById('authTitle');
@@ -304,102 +419,6 @@
         async function openReviewModal(id, name) { document.getElementById('revId').value = id; document.getElementById('revTitle').innerText = name; document.getElementById('reviewModal').style.display = 'flex'; if(user) document.getElementById('revName').value = user; loadReviews(id); }
         async function loadReviews(id) { const r = await fetch('/get_reviews', {method:'POST', body:new URLSearchParams({place_id:id})}); const d = await r.json(); const list = document.getElementById('revList'); if(d.reviews.length === 0) list.innerHTML = "<div style='color:#aaa'>No reviews yet.</div>"; else list.innerHTML = d.reviews.map(x => `<div class="rev-item"><div style="display:flex;justify-content:space-between;color:var(--accent)"><b>${x.user}</b> <span>${x.rating}★</span></div><div style="color:var(--text-muted);font-size:0.8rem">${x.date}</div><p>${x.text}</p></div>`).join(''); }
         async function subRev() { const id = document.getElementById('revId').value; const u = document.getElementById('revName').value || "Guest"; const r = document.getElementById('revRate').value; const t = document.getElementById('revText').value; await fetch('/submit_review', {method:'POST', body:new URLSearchParams({place_id:id, user_name:u, rating:r, review_text:t})}); alert("Review Posted!"); loadReviews(id); fetchData(); }
-        
-        // --- RESTORED doGeo FUNCTION ---
-        function doGeo() {
-            const btn = document.querySelector('button[onclick="doGeo()"]');
-            if(btn) btn.innerText = "Locating...";
-            navigator.geolocation.getCurrentPosition(
-                (p) => {
-                    document.getElementById('aLat').value = p.coords.latitude;
-                    document.getElementById('aLon').value = p.coords.longitude;
-                    if(btn) btn.innerText = "✅ GPS Found";
-                    alert("GPS Location Saved!");
-                },
-                (e) => {
-                    alert("GPS Error: " + e.message);
-                    if(btn) btn.innerText = "Find GPS";
-                }
-            );
-        }
-
-        // --- FIXED SUBPLACE (USING 'this' to avoid NULL error) ---
-        async function subPlace(btn){ 
-            const name = document.getElementById('aName').value;
-            const type = document.getElementById('aType').value;
-            // Get lat/lon hidden fields
-            const gLat = document.getElementById('aLat').value;
-            const gLon = document.getElementById('aLon').value;
-            
-            if(!name) return alert("Please enter a name");
-            
-            // Visual Feedback
-            if(btn) {
-                btn.disabled = true;
-                btn.innerText = "⏳ SAVING...";
-            }
-
-            try {
-                // 1. Determine Location
-                // Priority: Manual GPS Button -> Auto Geocode -> User's current location -> 0,0
-                let finalLat = gLat || 0;
-                let finalLon = gLon || 0;
-
-                if(finalLat == 0) {
-                    try {
-                        console.log("Attempting geocode fallback...");
-                        const geoRes = await fetch('/geocode', {
-                            method:'POST', 
-                            body:new URLSearchParams({address: name + ", " + curCity})
-                        });
-                        const geoData = await geoRes.json();
-                        if(geoData.status === 'success') {
-                            finalLat = geoData.lat;
-                            finalLon = geoData.lon;
-                        } else {
-                            // Fallback to user location if available
-                            finalLat = lat;
-                            finalLon = lon;
-                        }
-                    } catch(e) { console.log("Geocode failed"); }
-                }
-
-                // 2. Send to Database
-                const response = await fetch('/add_place', {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        city: curCity,
-                        category_type: type,
-                        name: name,
-                        desc: "User Added via Web",
-                        img_url: upImg || "", 
-                        budget: "N/A",
-                        lat: finalLat,
-                        lon: finalLon,
-                        user: user || "Guest"
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert("✅ Success: Place Added!");
-                    document.getElementById('addModal').style.display='none'; 
-                    fetchData();
-                } else {
-                    alert("❌ Server Error: " + data.message);
-                }
-
-            } catch (error) {
-                alert("❌ Error: " + error.message);
-            } finally {
-                // RESET BUTTON
-                if(btn) {
-                    btn.disabled = false;
-                    btn.innerText = "SUBMIT";
-                }
-            }
-        }
 
         function toggleMap(){ const m=document.getElementById('map-view'); m.style.display=m.style.display==='none'?'block':'none'; if(m.style.display==='block'){if(!map){map=L.map('map-view').setView([22.07,82.14],10);L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);} setTimeout(()=>map.invalidateSize(),100);}}
         function openRouteModal(){ document.getElementById('routeModal').style.display='flex'; }
