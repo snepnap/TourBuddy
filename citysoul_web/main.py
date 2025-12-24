@@ -3,6 +3,7 @@ import os
 import random
 import httpx
 import math
+import certifi  # <--- NEW IMPORT
 from datetime import datetime
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -15,21 +16,19 @@ app = FastAPI()
 
 # --- CONNECTION SETUP ---
 
-# 1. SETUP YOUR CREDENTIALS
-# We use quote_plus to handle the '@' in your password safely
+# 1. SETUP CREDENTIALS
 username = "snepnap"
 password = "Anand@123"
 cluster = "cluster0.oo1itji.mongodb.net"
 
 safe_pw = quote_plus(password)
-
-# 2. CREATE THE CONNECTION LINK
-# This is the ONLY link we will use. Do not add another MONGO_URI line below this.
 MONGO_URI = f"mongodb+srv://{username}:{safe_pw}@{cluster}/?retryWrites=true&w=majority&appName=Cluster0"
 
-# --- CONNECT TO DATABASE ---
+# --- CONNECT TO DATABASE (FIXED SSL) ---
 try:
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    # We add 'tlsCAFile=certifi.where()' to fix the SSL Handshake Error
+    ca = certifi.where()
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=ca)
     
     # Test connection immediately
     client.admin.command('ping')
