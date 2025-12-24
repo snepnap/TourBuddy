@@ -76,7 +76,7 @@ async def admin_panel(request: Request):
 
 @app.post("/login")
 async def login(data: dict):
-    if data.get('username') == "admin" and data.get('password') == "password123":
+    if data.get('username') == "admin" and data.get('password') == "Anand@912266":
         token = str(random.randint(10000,99999))
         SESSIONS[token] = "admin"
         return JSONResponse(content={"status": "success", "token": token, "role": "admin"})
