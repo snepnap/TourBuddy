@@ -4,8 +4,10 @@ import random
 import httpx
 import math
 import certifi
+import cloudinary
+import cloudinary.uploader
 from datetime import datetime
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -13,21 +15,24 @@ from pymongo import MongoClient
 
 app = FastAPI()
 
-# --- 1. SECURE CONNECTION SETUP ---
-# We no longer type the password here. We get it from the Server's Safe.
+# --- 1. CLOUDINARY CONFIGURATION ---
+# 📸 Your keys are now set up!
+cloudinary.config( 
+  cloud_name = "dnifw24ax", 
+  api_key = "383823447216573", 
+  api_secret = "_k1V1aY0mAJeSkHyfPLIDYyIvRc" 
+)
+
+# --- 2. SECURE DATABASE CONNECTION ---
 MONGO_URI = os.getenv("MONGO_URL")
 
-# Fallback check (Just in case you forgot Step 1)
+# Fallback check
 if not MONGO_URI:
     print("❌ ERROR: MONGO_URL not found! Did you add it to Render Environment Variables?")
 
-# --- 2. CONNECT TO DATABASE ---
 try:
-    # Use certifi for SSL safety
     ca = certifi.where()
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=ca)
-    
-    # Test connection
     client.admin.command('ping')
     print("✅ CONNECTED TO MONGODB SUCCESSFULLY!")
     
@@ -37,35 +42,20 @@ try:
     reviews_col = db.reviews
     IS_OFFLINE = False
 
-    # Auto-Create Admin (Secure)
-    # Note: We use a default password only if creating a NEW admin.
+    # Auto-Create Admin
     if not users_col.find_one({"username": "admin"}):
-        print(f"👤 Admin user missing. Creating default admin...")
-        users_col.insert_one({
-            "username": "admin",
-            "password": "Admin@12345", # You can change this later in DB
-            "role": "admin"
-        })
+        print(f"👤 Creating default admin...")
+        users_col.insert_one({"username": "admin", "password": "Admin@12345", "role": "admin"})
 
 except Exception as e:
     print(f"❌ DATABASE ERROR: {e}")
-    print("⚠️ STARTING IN OFFLINE MODE")
     IS_OFFLINE = True
-    class MockCol:
-        def find(self, *a, **k): return []
-        def find_one(self, *a, **k): return None
-        def insert_one(self, *a, **k): pass
-        def insert_many(self, *a, **k): pass
-        def delete_one(self, *a, **k): pass
-        def update_one(self, *a, **k): pass
-        def count_documents(self, *a, **k): return 0
-    places_col = users_col = reviews_col = MockCol()
+    places_col = users_col = reviews_col = None
 
 # --- SETUP ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
-IMG_DIR = os.path.join(STATIC_DIR, "images")
-os.makedirs(IMG_DIR, exist_ok=True)
+os.makedirs(STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory="templates")
 SESSIONS = {}
@@ -76,21 +66,14 @@ SESSIONS = {}
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_panel(request: Request):
-    return templates.TemplateResponse("admin.html", {"request": request})
-
 @app.post("/login")
 async def login(data: dict):
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "Database Offline"})
-
     user = users_col.find_one({"username": data.get('username')})
     if user and user['password'] == data.get('password'):
         token = str(random.randint(10000,99999))
         SESSIONS[token] = user['username']
-        role = user.get("role", "user")
-        return JSONResponse(content={"status": "success", "token": token, "role": role})
-        
+        return JSONResponse(content={"status": "success", "token": token, "role": user.get("role", "user")})
     return JSONResponse(content={"status": "error", "message": "Invalid Credentials"})
 
 @app.post("/register")
@@ -104,17 +87,12 @@ async def register(data: dict):
 @app.post("/discover_places")
 async def discover_places(city: str = Form(...), type: str = Form("places"), user_lat: float = Form(0), user_lon: float = Form(0)):
     if type in ["secret_places", "colleges"]: type = "places"
-    
     target_city = city.lower().strip()
-    items = list(places_col.find({
-        "category": type,
-        "city": {"$regex": f"^{target_city}$", "$options": "i"}
-    }, {'_id': 0}))
+    items = list(places_col.find({"category": type, "city": {"$regex": f"^{target_city}$", "$options": "i"}}, {'_id': 0}))
     
     for item in items:
         revs = list(reviews_col.find({"place_id": item['id']}))
         item['rating'] = round(sum(int(r['rating']) for r in revs)/len(revs), 1) if revs else 0
-        
         if user_lat != 0 and user_lon != 0:
             try:
                 R = 6371
@@ -127,94 +105,83 @@ async def discover_places(city: str = Form(...), type: str = Form("places"), use
                 item['distance'] = f"{round(R * c, 1)} km"
             except: item['distance'] = "N/A"
         else: item['distance'] = "N/A"
-
     return JSONResponse(content={"items": items, "city": city.title()})
 
+# --- UPDATED ADD PLACE (With Image Uploads) ---
 @app.post("/add_place")
 async def add_place(
     city: str = Form(...), 
     category_type: str = Form(...), 
     name: str = Form(...), 
     desc: str = Form(...), 
-    img_url: str = Form(""), 
     budget: str = Form(...), 
-    lat: str = Form("0"), # <--- Changed to String to handle empty inputs safely
+    # NEW: Accept a real file instead of just a URL string
+    file: UploadFile = File(None), 
+    lat: str = Form("0"),
     lon: str = Form("0"), 
     user: str = Form("Guest")
 ):
-    if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "DB Error - Check Logs"})
-    
+    if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "DB Error"})
     if category_type == "place": category_type = "places"
     
-    # 1. Handle Image
+    # 1. HANDLE IMAGE UPLOAD ☁️
     final_img = "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy"
-    if img_url and len(img_url) > 10: final_img = img_url
+    
+    if file:
+        print(f"📸 Uploading image for {name}...")
+        try:
+            # Send file to Cloudinary
+            upload_result = cloudinary.uploader.upload(file.file)
+            final_img = upload_result.get("url")
+            print(f"✅ Image Uploaded: {final_img}")
+        except Exception as e:
+            print(f"❌ Upload Failed: {e}")
 
-    # 2. Parse User Coordinates (Handle empty or text inputs)
-    try:
-        final_lat = float(lat)
-        final_lon = float(lon)
-    except:
-        final_lat = 0.0
-        final_lon = 0.0
+    # 2. AUTO-LOCATION MAGIC 🌍
+    try: final_lat, final_lon = float(lat), float(lon)
+    except: final_lat, final_lon = 0.0, 0.0
 
-    # 3. AUTO-LOCATION MAGIC 🌍
-    # If user didn't provide coordinates (sent 0), let's find them!
     if final_lat == 0 or final_lon == 0:
-        print(f"🌍 Auto-locating: {name}, {city}...")
+        print(f"🌍 Auto-locating: {name}...")
         try:
             async with httpx.AsyncClient() as client:
-                # Try finding exact place: "Red Fort, Delhi"
-                search_query = f"{name}, {city}"
-                resp = await client.get(
-                    f"https://nominatim.openstreetmap.org/search?q={search_query}&format=json&limit=1",
-                    headers={'User-Agent': 'TourBuddy'}, 
-                    timeout=5.0
-                )
+                resp = await client.get(f"https://nominatim.openstreetmap.org/search?q={name}, {city}&format=json&limit=1", headers={'User-Agent': 'TourBuddy'})
                 data = resp.json()
-                
                 if data:
-                    final_lat = float(data[0]['lat'])
-                    final_lon = float(data[0]['lon'])
-                    print(f"✅ Found exact location: {final_lat}, {final_lon}")
+                    final_lat, final_lon = float(data[0]['lat']), float(data[0]['lon'])
                 else:
-                    # Fallback: Just find the City center
-                    print("⚠️ Exact place not found, falling back to City.")
-                    resp_city = await client.get(
-                        f"https://nominatim.openstreetmap.org/search?q={city}&format=json&limit=1",
-                        headers={'User-Agent': 'TourBuddy'}, 
-                        timeout=5.0
-                    )
-                    data_city = resp_city.json()
-                    if data_city:
-                        final_lat = float(data_city[0]['lat'])
-                        final_lon = float(data_city[0]['lon'])
-        except Exception as e:
-            print(f"❌ Geocoding Failed: {e}")
+                    r2 = await client.get(f"https://nominatim.openstreetmap.org/search?q={city}&format=json&limit=1", headers={'User-Agent': 'TourBuddy'})
+                    d2 = r2.json()
+                    if d2: final_lat, final_lon = float(d2[0]['lat']), float(d2[0]['lon'])
+        except: pass
 
-    # 4. Save to Database
+    # 3. SAVE TO DB
     new_item = {
         "id": f"usr{random.randint(1000,9999)}", 
-        "name": name, 
-        "category": category_type, 
-        "budget": budget, 
-        "lat": final_lat, # Uses the auto-detected numbers
-        "lon": final_lon, 
-        "desc": desc, 
-        "img": final_img, 
-        "city": city
+        "name": name, "category": category_type, "budget": budget, 
+        "lat": final_lat, "lon": final_lon, "desc": desc, 
+        "img": final_img, "city": city, "user": user
     }
     places_col.insert_one(new_item)
-    return JSONResponse(content={"status": "success", "message": "Added with Auto-Location!"})
+    return JSONResponse(content={"status": "success", "message": "Added with Image & Auto-Location!"})
 
+# --- NEW: USER PROFILE ROUTE ---
+@app.post("/get_user_profile")
+async def get_user_profile(username: str = Form(...)):
+    if IS_OFFLINE: return JSONResponse(content={"status": "error", "places": [], "reviews": []})
+    my_places = list(places_col.find({"user": username}, {'_id': 0}))
+    my_reviews = list(reviews_col.find({"user": username}, {'_id': 0}))
+    return JSONResponse(content={"status": "success", "places": my_places, "reviews": my_reviews})
+
+# --- ADMIN & UTILS ---
 @app.post("/admin_delete")
-async def admin_delete(city: str = Form(...), category: str = Form(...), id: str = Form(...), token: str = Form(...)):
+async def admin_delete(id: str = Form(...), token: str = Form(...)):
     if token not in SESSIONS: return JSONResponse(content={"status": "error", "message": "Login required"})
     places_col.delete_one({"id": id})
     return JSONResponse(content={"status": "success", "message": "Deleted"})
 
 @app.post("/admin_update_image")
-async def admin_update_image(city: str = Form(...), category: str = Form(...), id: str = Form(...), img_url: str = Form(...), token: str = Form(...)):
+async def admin_update_image(id: str = Form(...), img_url: str = Form(...), token: str = Form(...)):
     if token not in SESSIONS: return JSONResponse(content={"status": "error", "message": "Unauthorized"})
     places_col.update_one({"id": id}, {"$set": {"img": img_url}})
     return JSONResponse(content={"status": "success", "message": "Image Updated!"})
@@ -230,23 +197,23 @@ async def get_reviews(place_id: str = Form(...)):
     revs = list(reviews_col.find({"place_id": place_id}, {'_id': 0}))
     return JSONResponse(content={"reviews": revs})
 
-# --- UTILS (Weather/Route) ---
 @app.post("/get_weather")
 async def get_weather(city: str = Form(...)):
     try:
         async with httpx.AsyncClient() as client:
             geo = await client.get(f"https://nominatim.openstreetmap.org/search?q={city}&format=json&limit=1", headers={'User-Agent': 'TourBuddy'}, timeout=4.0)
             data = geo.json()
-            if not data: return JSONResponse(content={"status": "error"})
-            w = await client.get(f"https://api.open-meteo.com/v1/forecast?latitude={data[0]['lat']}&longitude={data[0]['lon']}&current_weather=true", timeout=4.0)
-            return JSONResponse(content={"status": "success", "temp": w.json()['current_weather']['temperature']})
-    except: return JSONResponse(content={"status": "error"})
+            if data:
+                w = await client.get(f"https://api.open-meteo.com/v1/forecast?latitude={data[0]['lat']}&longitude={data[0]['lon']}&current_weather=true")
+                return JSONResponse(content={"status": "success", "temp": w.json()['current_weather']['temperature']})
+    except: pass
+    return JSONResponse(content={"status": "error"})
 
 @app.post("/geocode")
 async def geocode(address: str = Form(...)):
     try:
         async with httpx.AsyncClient() as client:
-            res = await client.get(f"https://nominatim.openstreetmap.org/search?q={address}&format=json&limit=1", headers={'User-Agent': 'TourBuddy'}, timeout=4.0)
+            res = await client.get(f"https://nominatim.openstreetmap.org/search?q={address}&format=json&limit=1", headers={'User-Agent': 'TourBuddy'})
             data = res.json()
             if data: return JSONResponse(content={"status": "success", "lat": float(data[0]['lat']), "lon": float(data[0]['lon'])})
     except: pass

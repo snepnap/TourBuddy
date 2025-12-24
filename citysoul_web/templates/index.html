@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy v3.0 (Fixed)</title>
+    <title>TourBuddy v4.0 (Pro)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
@@ -45,8 +45,6 @@
         .btn-sm:hover { background:var(--accent); color:white; }
         .btn-del { border-color: #ef4444; color:#ef4444; }
         .btn-del:hover { background: #ef4444; }
-        .btn-edit { border-color: #fbbf24; color:#fbbf24; }
-        .btn-edit:hover { background: #fbbf24; color:black; }
         .dist-badge { position:absolute; top:15px; right:15px; background:rgba(0,0,0,0.6); color:white; padding:5px 10px; border-radius:15px; font-size:0.8rem; backdrop-filter:blur(5px); }
         #map-view { width:100%; height:400px; border-radius:20px; border:1px solid var(--accent); margin-bottom:30px; display:none; }
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; backdrop-filter:blur(5px); }
@@ -54,16 +52,9 @@
         .close-btn { position:absolute; top:20px; right:20px; font-size:1.5rem; cursor:pointer; color:var(--text-muted); }
         .close-btn:hover { color:var(--accent); }
         .input-field { width:100%; padding:12px; background:rgba(128,128,128,0.1); border:var(--border); color:var(--text-main); border-radius:10px; margin-top:10px; box-sizing:border-box; outline:none; transition:0.3s; }
-        .input-field:focus { border-color:var(--accent); background:rgba(45,212,191,0.05); }
         .action-btn { width:100%; padding:12px; margin-top:20px; border-radius:40px; background:var(--accent); color:white; border:none; font-weight:bold; cursor:pointer; transition:0.3s; }
-        .action-btn:hover { opacity:0.9; transform:scale(1.02); }
-        .auth-header { margin-bottom:20px; }
-        .auth-header h2 { font-size:2rem; margin:0; color:var(--accent); font-family:'Playfair Display',serif; }
-        .auth-header p { color:var(--text-muted); font-size:0.9rem; margin-top:5px; }
-        .auth-toggle { margin-top:20px; font-size:0.9rem; color:var(--text-muted); }
-        .auth-toggle span { color:var(--accent); cursor:pointer; font-weight:600; text-decoration:underline; }
         .rev-list { text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px; background:rgba(128,128,128,0.05); padding:10px; border-radius:10px; }
-        .rev-item { border-bottom:1px solid var(--border); padding:8px 0; font-size:0.9rem; }
+        .mini-card { padding: 10px; border: var(--border); margin-bottom: 5px; border-radius: 8px; font-size: 0.9rem; text-align: left; background: rgba(128,128,128,0.05); }
     </style>
 </head>
 <body>
@@ -73,7 +64,7 @@
             <button class="nav-btn" onclick="toggleTheme()" id="themeBtn">☀</button>
             <div id="weather" style="font-size:0.9rem; font-weight:bold; color:var(--accent)">--°C</div>
             <button class="nav-btn" onclick="toggleMap()">Map</button>
-            <button class="nav-btn" onclick="openRouteModal()">Route</button>
+            <button class="nav-btn" id="profileBtn" onclick="openProfile()" style="display:none;">Profile</button>
             <div id="authBtn" class="nav-btn" onclick="handleAuthClick()">Login</div>
         </div>
     </div>
@@ -100,30 +91,14 @@
 
     <div class="fab" onclick="openAddModal()" style="position:fixed; bottom:30px; right:30px; width:60px; height:60px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:white; cursor:pointer; z-index:1500; box-shadow:0 0 20px rgba(45,212,191,0.3);">+</div>
 
-    <div id="editImgModal" class="modal-overlay" onclick="closeM(event)">
-        <div class="modal">
-            <div class="close-btn" onclick="document.getElementById('editImgModal').style.display='none'">×</div>
-            <h2>Update Image</h2>
-            <input type="hidden" id="editId">
-            <p id="editName" style="color:var(--accent); margin-bottom:15px;"></p>
-            <input type="file" id="editFile" class="input-field" onchange="readEditFile()">
-            <button onclick="submitEditImage()" class="action-btn">UPDATE IMAGE</button>
-        </div>
-    </div>
-
     <div id="authModal" class="modal-overlay" onclick="closeM(event)">
         <div class="modal">
             <div class="close-btn" onclick="document.getElementById('authModal').style.display='none'">×</div>
-            <div class="auth-header">
-                <h2 id="authTitle">Welcome Back</h2>
-                <p id="authSubtitle">Please sign in to continue</p>
-            </div>
+            <h2 id="authTitle">Welcome Back</h2>
             <input id="uName" placeholder="Username" class="input-field">
-            <input id="uPass" type="password" placeholder="Password" class="input-field" onkeypress="if(event.key==='Enter') doAuth()">
+            <input id="uPass" type="password" placeholder="Password" class="input-field">
             <button onclick="doAuth()" id="authActionBtn" class="action-btn">SIGN IN</button>
-            <div class="auth-toggle">
-                <span id="authToggleText" onclick="toggleAuthMode()">New here? Create an account</span>
-            </div>
+            <p id="authToggleText" style="margin-top:15px; cursor:pointer; font-size:0.9rem;" onclick="toggleAuthMode()">New here? Create an account</p>
         </div>
     </div>
 
@@ -132,20 +107,37 @@
             <div class="close-btn" onclick="document.getElementById('addModal').style.display='none'">×</div>
             <h2>Add Spot</h2>
             <input id="aName" placeholder="Name" class="input-field">
-            <input id="aAddr" placeholder="Address" class="input-field">
+            <input id="aDesc" placeholder="Short Description" class="input-field">
+            <input id="aBudget" placeholder="Budget (e.g. $10, Free)" class="input-field">
             
-            <button id="btn-find-gps" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer;">Find GPS</button>
+            <div style="display:flex; gap:5px;">
+                <input id="aLat" placeholder="Lat (Optional)" class="input-field">
+                <input id="aLon" placeholder="Lon (Optional)" class="input-field">
+            </div>
+            <button onclick="doGeo()" style="background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer; margin-top:5px; font-size:0.8rem;">📍 Auto-Detect GPS</button>
             
-            <input type="hidden" id="aLat"><input type="hidden" id="aLon">
-            <select id="aType" class="input-field" style="background:#0f172a;">
+            <select id="aType" class="input-field" style="background:var(--surface);">
                 <option value="places">Place</option>
                 <option value="food">Food</option>
                 <option value="shopping">Shop</option>
                 <option value="hotels">Hotel</option>
             </select>
-            <input type="file" id="aFile" class="input-field" onchange="readF()">
             
-            <button id="btn-add-submit" class="action-btn" style="border: 2px solid red;">SUBMIT (v3)</button>
+            <p style="text-align:left; font-size:0.8rem; margin-top:10px; color:var(--text-muted);">Upload Image (Optional):</p>
+            <input type="file" id="aFile" class="input-field" accept="image/*">
+            
+            <button id="btn-add-submit" class="action-btn" onclick="subPlace()">SUBMIT SPOT</button>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal-overlay" onclick="closeM(event)">
+        <div class="modal">
+            <div class="close-btn" onclick="document.getElementById('profileModal').style.display='none'">×</div>
+            <h2>My Profile</h2>
+            <h4 style="text-align:left; color:var(--accent); margin-top:15px;">My Added Places</h4>
+            <div id="myPlacesList" class="rev-list">Loading...</div>
+            <h4 style="text-align:left; color:var(--accent); margin-top:15px;">My Reviews</h4>
+            <div id="myReviewsList" class="rev-list">Loading...</div>
         </div>
     </div>
 
@@ -154,260 +146,291 @@
             <div class="close-btn" onclick="document.getElementById('detailModal').style.display='none'">×</div>
             <h2 id="detName" style="color:var(--accent)"></h2>
             <img id="detImg" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin:10px 0;">
-            <p id="detDesc" style="color:var(--text-muted); margin-top:10px; line-height:1.6;"></p>
+            <p id="detDesc" style="color:var(--text-muted); line-height:1.6;"></p>
             <div style="display:flex; justify-content:space-around; margin-top:20px; font-weight:bold;">
-                <div id="detDist" style="color:var(--accent)">📍 -- km</div>
-                <div id="detRate" style="color:#fbbf24">⭐ --</div>
+                <div id="detDist"></div>
+                <div id="detRate"></div>
             </div>
-            <button id="detNavBtn" class="action-btn">Navigate Here</button>
         </div>
     </div>
 
     <div id="reviewModal" class="modal-overlay" onclick="closeM(event)">
         <div class="modal">
             <div class="close-btn" onclick="document.getElementById('reviewModal').style.display='none'">×</div>
-            <h2 id="revTitle" style="color:var(--accent)">Reviews</h2>
-            <div id="revList" class="rev-list">Loading...</div>
+            <h2 id="revTitle">Reviews</h2>
+            <div id="revList" class="rev-list"></div>
             <input type="hidden" id="revId">
-            <input id="revName" placeholder="Your Name" class="input-field">
             <input type="number" id="revRate" placeholder="Rating (1-5)" class="input-field" min="1" max="5">
             <textarea id="revText" placeholder="Share your experience..." class="input-field" rows="3"></textarea>
             <button onclick="subRev()" class="action-btn">POST REVIEW</button>
         </div>
     </div>
 
-    <div id="routeModal" class="modal-overlay" onclick="closeM(event)">
-        <div class="modal">
-            <div class="close-btn" onclick="document.getElementById('routeModal').style.display='none'">×</div>
-            <h2>Route</h2>
-            <button onclick="getLoc()" class="input-field" style="text-align:left;">📍 Use My Location</button>
-            <input id="rDest" placeholder="Destination" class="input-field">
-            <button onclick="calcRoute()" class="action-btn">GO</button>
-        </div>
-    </div>
-
     <script>
-        // --- SAFE INITIALIZATION (Wait for HTML to load) ---
+        // --- GLOBAL VARIABLES ---
+        let isDark=true, curCity="Bilaspur", curType="places", lat=0, lon=0;
+        let map, markers=[], isRegister=false;
+        let token = localStorage.getItem("tok");
+        let user = localStorage.getItem("usr");
+        let role = localStorage.getItem("role");
+
+        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("TourBuddy v3.0 Loaded");
-
-            // BIND BUTTONS
-            const btnGeo = document.getElementById('btn-find-gps');
-            const btnSub = document.getElementById('btn-add-submit');
-
-            if(btnGeo) {
-                console.log("GPS Button Found");
-                btnGeo.addEventListener('click', doGeo);
-            } else { console.error("GPS Button Missing"); }
-
-            if(btnSub) {
-                console.log("Submit Button Found");
-                btnSub.addEventListener('click', subPlace);
-            } else { console.error("Submit Button Missing"); }
-
-            // Initial Data Load
             ui();
+            // Try to get user location
             if(navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     p=>{ lat=p.coords.latitude; lon=p.coords.longitude; fetchData(); }, 
                     ()=>fetchData()
                 );
-            } else {
-                fetchData();
-            }
+            } else { fetchData(); }
         });
 
-        // --- GLOBAL VARS ---
-        let isDark=true, curCity="Bilaspur", curType="places", token=localStorage.getItem("tok"), user=localStorage.getItem("usr"), userRole=localStorage.getItem("role"), lat=0, lon=0, map, routePolyline, upImg="", editImg="", isRegister=false, currentItems=[];
-
-        // --- CORE FUNCTIONS ---
-        function doGeo() {
-            const btn = document.getElementById('btn-find-gps');
-            if(btn) btn.innerText = "Locating...";
-            
-            if(!navigator.geolocation) { alert("GPS not supported"); return; }
-            
-            navigator.geolocation.getCurrentPosition(
-                (p) => {
-                    document.getElementById('aLat').value = p.coords.latitude;
-                    document.getElementById('aLon').value = p.coords.longitude;
-                    if(btn) btn.innerText = "✅ GPS Found";
-                    alert("Location Saved!");
-                },
-                (e) => {
-                    alert("GPS Error: " + e.message);
-                    if(btn) btn.innerText = "Find GPS";
-                }
-            );
+        function ui(){ 
+            const b=document.getElementById('authBtn'); 
+            const p=document.getElementById('profileBtn');
+            if(token) {
+                b.innerText = "Logout";
+                b.style.color = "var(--accent)";
+                p.style.display = "block"; // Show profile button
+            } else {
+                b.innerText = "Login";
+                b.style.color = "var(--text-muted)";
+                p.style.display = "none";
+            }
         }
 
-        async function subPlace() {
-            console.log("Submit Clicked (Safe Mode)");
-            const btn = document.getElementById('btn-add-submit');
-            const name = document.getElementById('aName').value;
-            const type = document.getElementById('aType').value;
-            const gLat = document.getElementById('aLat').value;
-            const gLon = document.getElementById('aLon').value;
+        // --- AUTH & PROFILE ---
+        function handleAuthClick(){ 
+            if(token){ localStorage.clear(); location.reload(); }
+            else document.getElementById('authModal').style.display='flex'; 
+        }
 
-            if(!name) return alert("Please enter a name");
+        function toggleAuthMode() {
+            isRegister = !isRegister;
+            const t = document.getElementById('authToggleText');
+            const b = document.getElementById('authActionBtn');
+            document.getElementById('authTitle').innerText = isRegister ? "Create Account" : "Welcome Back";
+            b.innerText = isRegister ? "REGISTER" : "SIGN IN";
+            t.innerText = isRegister ? "Already have an account? Sign In" : "New here? Create an account";
+        }
 
-            if(btn) {
-                btn.disabled = true;
-                btn.innerText = "⏳ SAVING...";
-            }
-
+        async function doAuth(){ 
+            const u=document.getElementById('uName').value;
+            const p=document.getElementById('uPass').value;
+            const ep = isRegister ? '/register' : '/login';
             try {
-                let finalLat = gLat || 0;
-                let finalLon = gLon || 0;
-
-                // Simple Geocode Fallback
-                if(finalLat == 0) {
-                    try {
-                        const geoRes = await fetch('/geocode', {
-                            method:'POST', 
-                            body:new URLSearchParams({address: name + ", " + curCity})
-                        });
-                        const geoData = await geoRes.json();
-                        if(geoData.status === 'success') {
-                            finalLat = geoData.lat;
-                            finalLon = geoData.lon;
-                        } else {
-                            finalLat = lat; 
-                            finalLon = lon;
-                        }
-                    } catch(e) { console.log("Geocode skipped"); }
-                }
-
-                const response = await fetch('/add_place', {
+                const r = await fetch(ep, {
                     method: 'POST',
-                    body: new URLSearchParams({
-                        city: curCity,
-                        category_type: type,
-                        name: name,
-                        desc: "User Added via Web",
-                        img_url: upImg || "", 
-                        budget: "N/A",
-                        lat: finalLat,
-                        lon: finalLon,
-                        user: user || "Guest"
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
                 });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert("✅ Success: Place Added!");
-                    document.getElementById('addModal').style.display='none'; 
-                    fetchData();
-                } else {
-                    alert("❌ Server Error: " + data.message);
-                }
-
-            } catch (error) {
-                alert("❌ Error: " + error.message);
-            } finally {
-                if(btn) {
-                    btn.disabled = false;
-                    btn.innerText = "SUBMIT (v3)";
-                }
-            }
+                const d = await r.json();
+                if(d.status==='success'){ 
+                    if(!isRegister) { 
+                        localStorage.setItem('tok',d.token);
+                        localStorage.setItem('usr',u);
+                        localStorage.setItem('role',d.role); 
+                        token=d.token; user=u; role=d.role;
+                        ui(); 
+                        document.getElementById('authModal').style.display='none';
+                        fetchData();
+                    } else { 
+                        alert("Created! Please Login."); 
+                        toggleAuthMode(); 
+                    } 
+                } else alert(d.message); 
+            } catch(e) { alert("Error"); }
         }
 
-        // --- UTILS ---
-        function ui(){ const b=document.getElementById('authBtn'); b.innerText = token ? user : "Login"; if(token) b.style.color = "var(--accent)"; }
-        function toggleTheme() {
-            isDark = !isDark;
-            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeBtn').innerText = isDark ? '☀' : '☾';
+        async function openProfile() {
+            if(!user) return;
+            document.getElementById('profileModal').style.display='flex';
+            const fd = new FormData(); fd.append('username', user);
+            
+            const r = await fetch('/get_user_profile', {method:'POST', body:fd});
+            const d = await r.json();
+            
+            // Render User Places
+            const pl = document.getElementById('myPlacesList');
+            pl.innerHTML = d.places.length ? d.places.map(x=>`<div class="mini-card"><b>${x.name}</b><br><small>${x.city}</small> <span style="float:right;cursor:pointer;" onclick="deleteItem('${x.id}')">🗑️</span></div>`).join('') : 'No places added.';
+            
+            // Render User Reviews
+            const rl = document.getElementById('myReviewsList');
+            rl.innerHTML = d.reviews.length ? d.reviews.map(x=>`<div class="mini-card"><b>${x.rating}⭐</b> on Place ID: ${x.place_id}<br>"${x.text}"</div>`).join('') : 'No reviews.';
         }
+
+        // --- MAP & DATA ---
         async function fetchData() {
             const city = document.getElementById('cityInput').value; curCity=city;
             document.getElementById('heroCity').innerText = city.toUpperCase();
+            
+            // Fetch Data
             try {
-                const [w, d] = await Promise.all([
-                    fetch('/get_weather', {method:'POST', body:new URLSearchParams({city:city})}).then(r=>r.json()),
-                    fetch('/discover_places', {method:'POST', body:new URLSearchParams({city:city, type:curType, user_lat:lat, user_lon:lon})}).then(r=>r.json())
-                ]);
-                if(w.status==='success') document.getElementById('weather').innerText = `${w.temp}°C`;
+                const fd = new FormData(); 
+                fd.append('city', city); fd.append('type', curType);
+                fd.append('user_lat', lat); fd.append('user_lon', lon);
+                
+                const r = await fetch('/discover_places', {method:'POST', body:fd});
+                const d = await r.json();
                 render(d.items);
+                
+                // Fetch Weather (Optional)
+                const wr = await fetch('/get_weather', {method:'POST', body:fd});
+                const wd = await wr.json();
+                if(wd.status==='success') document.getElementById('weather').innerText = wd.temp + "°C";
+
             } catch(e) { console.error(e); }
         }
+
         function render(items) {
-            currentItems = items;
             const g = document.getElementById('grid'); g.innerHTML = '';
+            
+            // Initialize Map if needed
+            if(!map) {
+                map = L.map('map-view').setView([20.59, 78.96], 5);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            }
+            // Clear old markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
             if(!items || items.length===0) { g.innerHTML='<div style="color:var(--text-muted)">No spots found.</div>'; return; }
+            
             items.forEach((i) => {
-                const distBadge = i.distance !== "N/A" ? `<div class="dist-badge">📍 ${i.distance}</div>` : '';
-                let adminControls = "";
-                if(userRole === "admin") {
-                    adminControls = `<button class="btn-sm btn-edit" onclick="openEditImage('${i.id}', '${i.name}')">✏️</button>
-                                     <button class="btn-sm btn-del" onclick="deleteItem('${i.id}')">🗑️</button>`;
+                // Add Map Marker
+                if(i.lat && i.lon && i.lat!==0) {
+                    const m = L.marker([i.lat, i.lon]).addTo(map).bindPopup(`<b>${i.name}</b>`);
+                    markers.push(m);
                 }
+
+                // Add Card
+                const distBadge = i.distance !== "N/A" ? `<div class="dist-badge">📍 ${i.distance}</div>` : '';
+                const btnDel = role==="admin" ? `<button class="btn-sm btn-del" onclick="deleteItem('${i.id}')">🗑️</button>` : '';
+                
                 const d = document.createElement('div'); d.className='card';
                 d.innerHTML = `
                     ${distBadge}
                     <img src="${i.img}" class="card-img" loading="lazy">
                     <div class="card-body">
                         <h3>${i.name}</h3>
-                        <p>${i.category}</p>
-                        <div class="btn-group" style="display:flex; gap:5px;">
-                            <button class="btn-sm" onclick="openDetailModal('${i.id}')">Info</button>
-                            <button class="btn-sm" onclick="openReviewModal('${i.id}', '${i.name}')">Review</button>
-                            <button class="btn-sm" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}')">Nav</button>
-                            ${adminControls}
+                        <p style="color:var(--accent)">${i.budget}</p>
+                        <div style="display:flex; gap:5px; margin-top:10px;">
+                            <button class="btn-sm" onclick="openDetailModal('${i.id}', '${i.name}', '${i.img}', '${i.desc}', '${i.distance}', '${i.rating}')">Info</button>
+                            <button class="btn-sm" onclick="openRev('${i.id}', '${i.name}')">Review</button>
+                            ${btnDel}
                         </div>
                     </div>`;
                 g.appendChild(d);
             });
+            
+            // Auto-fit map to pins
+            if(markers.length > 0) {
+                const group = new L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.2));
+            }
             VanillaTilt.init(document.querySelectorAll(".card"));
         }
-        function openEditImage(id, name) { document.getElementById('editId').value = id; document.getElementById('editName').innerText = "Editing: " + name; document.getElementById('editImgModal').style.display = 'flex'; }
-        function readEditFile() { const f=document.getElementById('editFile').files[0], r=new FileReader(); r.onload=()=>editImg=r.result; if(f)r.readAsDataURL(f); }
-        async function submitEditImage() {
-            const id = document.getElementById('editId').value;
-            if(!editImg) return alert("Select an image!");
-            await fetch('/admin_update_image', {method:'POST', body:new URLSearchParams({city:curCity, category:curType, id:id, img_url:editImg, token:token})});
-            alert("Image Updated!");
-            document.getElementById('editImgModal').style.display='none';
-            fetchData();
-        }
-        function toggleAuthMode() {
-            isRegister = !isRegister;
-            const title = document.getElementById('authTitle');
-            const sub = document.getElementById('authSubtitle');
-            const btn = document.getElementById('authActionBtn');
-            const toggle = document.getElementById('authToggleText');
-            if (isRegister) { title.innerText = "Create Account"; sub.innerText = "Join the community today"; btn.innerText = "REGISTER"; toggle.innerHTML = "Already have an account? <span style='color:var(--accent); text-decoration:underline;'>Sign In</span>"; } 
-            else { title.innerText = "Welcome Back"; sub.innerText = "Please sign in to continue"; btn.innerText = "SIGN IN"; toggle.innerHTML = "New here? <span style='color:var(--accent); text-decoration:underline;'>Create an account</span>"; }
-        }
-        function handleAuthClick(){ if(token){localStorage.clear();location.reload();}else document.getElementById('authModal').style.display='flex'; }
-        async function doAuth(){ 
-            const u=document.getElementById('uName').value.trim();
-            const p=document.getElementById('uPass').value.trim();
-            const endpoint = isRegister ? '/register' : '/login';
-            try {
-                const r = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: u, password: p })
-                });
-                const d = await r.json();
-                if(d.status==='success'){ if(!isRegister) { localStorage.setItem('tok',d.token);localStorage.setItem('usr',u);localStorage.setItem('role',d.role); token=d.token;user=u;userRole=d.role; ui(); if(d.role==="admin")alert("Admin Mode Active"); } else { alert("Created! Login now."); toggleAuthMode(); return; } document.getElementById('authModal').style.display='none'; fetchData(); } else alert(d.message); 
-            } catch(e) { alert("Auth Error"); }
-        }
-        async function deleteItem(id) { if(confirm("Admin: Delete this place?")) { await fetch('/admin_delete', {method:'POST', body:new URLSearchParams({city:curCity, category:curType, id:id, token:token})}); fetchData(); } }
-        function openDetailModal(id) { const item = currentItems.find(x => x.id === id); if(!item) return; document.getElementById('detName').innerText = item.name; document.getElementById('detImg').src = item.img; document.getElementById('detDesc').innerText = item.desc || "No description."; document.getElementById('detDist').innerText = "📍 " + item.distance; document.getElementById('detRate').innerText = "⭐ " + item.rating; document.getElementById('detNavBtn').onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lon}`); document.getElementById('detailModal').style.display = 'flex'; }
-        async function openReviewModal(id, name) { document.getElementById('revId').value = id; document.getElementById('revTitle').innerText = name; document.getElementById('reviewModal').style.display = 'flex'; if(user) document.getElementById('revName').value = user; loadReviews(id); }
-        async function loadReviews(id) { const r = await fetch('/get_reviews', {method:'POST', body:new URLSearchParams({place_id:id})}); const d = await r.json(); const list = document.getElementById('revList'); if(d.reviews.length === 0) list.innerHTML = "<div style='color:#aaa'>No reviews yet.</div>"; else list.innerHTML = d.reviews.map(x => `<div class="rev-item"><div style="display:flex;justify-content:space-between;color:var(--accent)"><b>${x.user}</b> <span>${x.rating}★</span></div><div style="color:var(--text-muted);font-size:0.8rem">${x.date}</div><p>${x.text}</p></div>`).join(''); }
-        async function subRev() { const id = document.getElementById('revId').value; const u = document.getElementById('revName').value || "Guest"; const r = document.getElementById('revRate').value; const t = document.getElementById('revText').value; await fetch('/submit_review', {method:'POST', body:new URLSearchParams({place_id:id, user_name:u, rating:r, review_text:t})}); alert("Review Posted!"); loadReviews(id); fetchData(); }
-        function toggleMap(){ const m=document.getElementById('map-view'); m.style.display=m.style.display==='none'?'block':'none'; if(m.style.display==='block'){if(!map){map=L.map('map-view').setView([22.07,82.14],10);L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);} setTimeout(()=>map.invalidateSize(),100);}}
-        function openRouteModal(){ document.getElementById('routeModal').style.display='flex'; }
-        function getLoc(){ navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;alert('Found');}); }
-        async function calcRoute(){ const r=await fetch('/plan_route',{method:'POST',body:new URLSearchParams({user_lat:lat,user_lon:lon,dest_city:document.getElementById('rDest').value})}); const d=await r.json(); document.getElementById('routeModal').style.display='none'; document.getElementById('map-view').style.display='block'; if(!map){ map=L.map('map-view'); L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map); } setTimeout(()=>map.invalidateSize(),100); if(routePolyline) map.removeLayer(routePolyline); const pts = d.route.map(p=>[p.lat, p.lon]); routePolyline = L.polyline(pts, {color: '#2dd4bf'}).addTo(map); map.fitBounds(routePolyline.getBounds()); d.route.forEach(p => L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name)); }
-        function switchTab(t,b){ curType=t; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active'); fetchData(); }
+
+        // --- ACTIONS ---
         function openAddModal(){ document.getElementById('addModal').style.display='flex'; }
-        function readF(){ const f=document.getElementById('aFile').files[0], r=new FileReader(); r.onload=()=>upImg=r.result; if(f)r.readAsDataURL(f); }
-        function closeM(e){ if(e.target.className==='modal-overlay'||e.target.className==='close-btn')e.target.closest('.modal-overlay').style.display='none'; }
+        
+        async function subPlace() {
+            const btn = document.getElementById('btn-add-submit');
+            btn.innerText = "⏳ Uploading..."; btn.disabled = true;
+
+            const fd = new FormData();
+            fd.append('city', curCity);
+            fd.append('category_type', document.getElementById('aType').value);
+            fd.append('name', document.getElementById('aName').value);
+            fd.append('desc', document.getElementById('aDesc').value);
+            fd.append('budget', document.getElementById('aBudget').value);
+            fd.append('lat', document.getElementById('aLat').value || "0");
+            fd.append('lon', document.getElementById('aLon').value || "0");
+            fd.append('user', user || "Guest");
+            
+            // Handle File
+            const fileInput = document.getElementById('aFile');
+            if(fileInput.files[0]) {
+                fd.append('file', fileInput.files[0]);
+            }
+
+            try {
+                const r = await fetch('/add_place', { method: 'POST', body: fd });
+                const d = await r.json();
+                if(d.status==='success') {
+                    alert("✅ Place Added!");
+                    document.getElementById('addModal').style.display='none';
+                    fetchData();
+                } else alert("Error: " + d.message);
+            } catch(e) { alert("Upload Failed"); }
+            
+            btn.innerText = "SUBMIT SPOT"; btn.disabled = false;
+        }
+
+        function doGeo() {
+            navigator.geolocation.getCurrentPosition(p=>{
+                document.getElementById('aLat').value = p.coords.latitude;
+                document.getElementById('aLon').value = p.coords.longitude;
+                alert("GPS Found!");
+            });
+        }
+
+        async function deleteItem(id) {
+            if(!confirm("Delete this?")) return;
+            const fd = new FormData(); fd.append('id', id); fd.append('token', token);
+            await fetch('/admin_delete', {method:'POST', body:fd});
+            fetchData();
+            openProfile(); // Reload profile if open
+        }
+
+        // --- REVIEWS & DETAILS ---
+        function openDetailModal(id, name, img, desc, dist, rate) {
+            document.getElementById('detName').innerText = name;
+            document.getElementById('detImg').src = img;
+            document.getElementById('detDesc').innerText = desc || "No description.";
+            document.getElementById('detDist').innerText = "📍 " + dist;
+            document.getElementById('detRate').innerText = "⭐ " + rate;
+            document.getElementById('detailModal').style.display='flex';
+        }
+
+        async function openRev(id, name) {
+            document.getElementById('revId').value = id;
+            document.getElementById('revTitle').innerText = name;
+            document.getElementById('reviewModal').style.display='flex';
+            
+            const fd = new FormData(); fd.append('place_id', id);
+            const r = await fetch('/get_reviews', {method:'POST', body:fd});
+            const d = await r.json();
+            const l = document.getElementById('revList');
+            l.innerHTML = d.reviews.length ? d.reviews.map(x=>`<div class="mini-card"><b>${x.user}</b>: ${x.text}</div>`).join('') : "No reviews yet.";
+        }
+
+        async function subRev() {
+            const fd = new FormData();
+            fd.append('place_id', document.getElementById('revId').value);
+            fd.append('user_name', user || "Guest");
+            fd.append('rating', document.getElementById('revRate').value);
+            fd.append('review_text', document.getElementById('revText').value);
+            
+            await fetch('/submit_review', {method:'POST', body:fd});
+            alert("Review Posted!");
+            document.getElementById('reviewModal').style.display='none';
+        }
+
+        // --- UTILS ---
+        function toggleTheme() {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeBtn').innerText = isDark ? '☀' : '☾';
+        }
+        function toggleMap() {
+            const m = document.getElementById('map-view');
+            m.style.display = m.style.display==='none' ? 'block' : 'none';
+            if(map) map.invalidateSize();
+        }
+        function switchTab(t,b){ curType=t; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active'); fetchData(); }
+        function closeM(e){ if(e.target.className.includes('modal-overlay') || e.target.className.includes('close-btn')) e.target.closest('.modal-overlay').style.display='none'; }
     </script>
 </body>
 </html>

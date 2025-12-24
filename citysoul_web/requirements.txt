@@ -11,3 +11,4 @@ python-dotenv
 dnspython
 email-validator
 certifi
+cloudinary
