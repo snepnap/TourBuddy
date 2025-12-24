@@ -16,7 +16,6 @@ from pymongo import MongoClient
 app = FastAPI()
 
 # --- 1. CLOUDINARY CONFIGURATION ---
-# 📸 Your keys are now set up!
 cloudinary.config( 
   cloud_name = "dnifw24ax", 
   api_key = "383823447216573", 
@@ -26,7 +25,6 @@ cloudinary.config(
 # --- 2. SECURE DATABASE CONNECTION ---
 MONGO_URI = os.getenv("MONGO_URL")
 
-# Fallback check
 if not MONGO_URI:
     print("❌ ERROR: MONGO_URL not found! Did you add it to Render Environment Variables?")
 
@@ -42,7 +40,6 @@ try:
     reviews_col = db.reviews
     IS_OFFLINE = False
 
-    # Auto-Create Admin
     if not users_col.find_one({"username": "admin"}):
         print(f"👤 Creating default admin...")
         users_col.insert_one({"username": "admin", "password": "Admin@12345", "role": "admin"})
@@ -107,7 +104,6 @@ async def discover_places(city: str = Form(...), type: str = Form("places"), use
         else: item['distance'] = "N/A"
     return JSONResponse(content={"items": items, "city": city.title()})
 
-# --- UPDATED ADD PLACE (With Image Uploads) ---
 @app.post("/add_place")
 async def add_place(
     city: str = Form(...), 
@@ -115,7 +111,6 @@ async def add_place(
     name: str = Form(...), 
     desc: str = Form(...), 
     budget: str = Form(...), 
-    # NEW: Accept a real file instead of just a URL string
     file: UploadFile = File(None), 
     lat: str = Form("0"),
     lon: str = Form("0"), 
@@ -124,20 +119,17 @@ async def add_place(
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "DB Error"})
     if category_type == "place": category_type = "places"
     
-    # 1. HANDLE IMAGE UPLOAD ☁️
     final_img = "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy"
     
     if file:
         print(f"📸 Uploading image for {name}...")
         try:
-            # Send file to Cloudinary
             upload_result = cloudinary.uploader.upload(file.file)
             final_img = upload_result.get("url")
             print(f"✅ Image Uploaded: {final_img}")
         except Exception as e:
             print(f"❌ Upload Failed: {e}")
 
-    # 2. AUTO-LOCATION MAGIC 🌍
     try: final_lat, final_lon = float(lat), float(lon)
     except: final_lat, final_lon = 0.0, 0.0
 
@@ -155,7 +147,6 @@ async def add_place(
                     if d2: final_lat, final_lon = float(d2[0]['lat']), float(d2[0]['lon'])
         except: pass
 
-    # 3. SAVE TO DB
     new_item = {
         "id": f"usr{random.randint(1000,9999)}", 
         "name": name, "category": category_type, "budget": budget, 
@@ -165,7 +156,6 @@ async def add_place(
     places_col.insert_one(new_item)
     return JSONResponse(content={"status": "success", "message": "Added with Image & Auto-Location!"})
 
-# --- NEW: USER PROFILE ROUTE ---
 @app.post("/get_user_profile")
 async def get_user_profile(username: str = Form(...)):
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "places": [], "reviews": []})
@@ -173,7 +163,6 @@ async def get_user_profile(username: str = Form(...)):
     my_reviews = list(reviews_col.find({"user": username}, {'_id': 0}))
     return JSONResponse(content={"status": "success", "places": my_places, "reviews": my_reviews})
 
-# --- ADMIN & UTILS ---
 @app.post("/admin_delete")
 async def admin_delete(id: str = Form(...), token: str = Form(...)):
     if token not in SESSIONS: return JSONResponse(content={"status": "error", "message": "Login required"})
@@ -222,6 +211,72 @@ async def geocode(address: str = Form(...)):
 @app.post("/plan_route")
 async def plan_route(user_lat: float = Form(...), user_lon: float = Form(...), dest_city: str = Form(...)):
     return JSONResponse(content={"status": "success", "route": [{"step":1, "name":"Start", "lat":user_lat, "lon":user_lon}, {"step":2, "name":dest_city, "lat":user_lat+0.01, "lon":user_lon+0.01}]})
+
+# --- ADMIN DASHBOARD ANALYTICS 📊 ---
+@app.get("/admin_stats")
+async def admin_stats():
+    if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "Offline"})
+    try:
+        u_count = users_col.count_documents({})
+        p_count = places_col.count_documents({})
+        r_count = reviews_col.count_documents({})
+        cat_pipeline = [{"$group": {"_id": "$category", "count": {"$sum": 1}}}]
+        cats = list(places_col.aggregate(cat_pipeline))
+        city_pipeline = [{"$group": {"_id": "$city", "count": {"$sum": 1}}},{"$sort": {"count": -1}},{"$limit": 5}]
+        cities = list(places_col.aggregate(city_pipeline))
+        return JSONResponse(content={
+            "status": "success",
+            "counts": [u_count, p_count, r_count],
+            "cat_labels": [c["_id"].title() for c in cats],
+            "cat_values": [c["count"] for c in cats],
+            "city_labels": [c["_id"].title() for c in cities],
+            "city_values": [c["count"] for c in cities]
+        })
+    except Exception as e:
+        return JSONResponse(content={"status": "error"})
+
+# --- ADMIN CMS API (NEW SECTION ✅) ---
+@app.get("/api/cities")
+async def get_cities():
+    cities = places_col.distinct("city")
+    return JSONResponse(cities)
+
+@app.get("/admin/api/items/{city}/{category}")
+async def get_admin_items(city: str, category: str, token: str):
+    if token not in SESSIONS: return JSONResponse([])
+    items = list(places_col.find({
+        "city": {"$regex": f"^{city}$", "$options": "i"},
+        "category": category
+    }, {'_id': 0}))
+    return JSONResponse(items)
+
+@app.post("/admin/api/edit/{city}/{category}/{id}")
+async def edit_item(city: str, category: str, id: str, 
+                    name: str = Form(...), desc: str = Form(...), 
+                    rating: str = Form(...), budget: str = Form(...),
+                    lat: float = Form(0), lon: float = Form(0),
+                    token: str = Form(...)):
+    
+    if token not in SESSIONS: return JSONResponse({"status": "error"})
+    
+    places_col.update_one({"id": id}, {"$set": {
+        "name": name, "desc": desc, "budget": budget, "lat": lat, "lon": lon
+    }})
+    return JSONResponse({"status": "success"})
+
+@app.post("/admin/api/upload/{city}/{category}/{id}")
+async def upload_admin_image(id: str, token: str = Form(...), img_data: str = Form(...)):
+    if token not in SESSIONS: return JSONResponse({"status": "error"})
+    
+    try:
+        final_data = f"data:image/jpeg;base64,{img_data}"
+        res = cloudinary.uploader.upload(final_data)
+        new_url = res.get("url")
+        places_col.update_one({"id": id}, {"$set": {"img": new_url}})
+        return JSONResponse({"status": "success", "url": new_url})
+    except Exception as e:
+        print(f"Upload Error: {e}")
+        return JSONResponse({"status": "error"})
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
