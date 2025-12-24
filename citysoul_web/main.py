@@ -106,11 +106,19 @@ async def register(data: dict):
 async def discover_places(city: str = Form(...), type: str = Form("places"), user_lat: float = Form(0), user_lon: float = Form(0)):
     if type in ["secret_places", "colleges"]: type = "places"
     
-    # Fetch from MongoDB
-    items = list(places_col.find({"category": type}, {'_id': 0}))
+    # 1. CLEAN THE CITY NAME
+    # This makes "bilaspur", "Bilaspur ", and "BILASPUR" all match the same data.
+    target_city = city.lower().strip()
+
+    # 2. FILTER BY CATEGORY *AND* CITY
+    # We use a "case-insensitive regex" so even if data is "Bilaspur" and user types "bilaspur", it works.
+    items = list(places_col.find({
+        "category": type,
+        "city": {"$regex": f"^{target_city}$", "$options": "i"} 
+    }, {'_id': 0}))
     
+    # 3. Add distance & ratings (same as before)
     for item in items:
-        # Calculate rating
         revs = list(reviews_col.find({"place_id": item['id']}))
         item['rating'] = round(sum(int(r['rating']) for r in revs)/len(revs), 1) if revs else 0
         
