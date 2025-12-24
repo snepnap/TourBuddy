@@ -121,7 +121,7 @@
             <input type="hidden" id="editId">
             <p id="editName" style="color:var(--accent); margin-bottom:15px;"></p>
             <input type="file" id="editFile" class="input-field" onchange="readEditFile()">
-            <button id="subBtn" onclick="subPlace()" class="action-btn">SUBMIT</button>
+            <button onclick="submitEditImage()" class="action-btn">UPDATE IMAGE</button>
         </div>
     </div>
 
@@ -289,7 +289,6 @@
             const p=document.getElementById('uPass').value.trim();
             const endpoint = isRegister ? '/register' : '/login';
             
-            // USE JSON REQUEST (Avoids python-multipart crash for login)
             const r = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -305,74 +304,74 @@
         async function openReviewModal(id, name) { document.getElementById('revId').value = id; document.getElementById('revTitle').innerText = name; document.getElementById('reviewModal').style.display = 'flex'; if(user) document.getElementById('revName').value = user; loadReviews(id); }
         async function loadReviews(id) { const r = await fetch('/get_reviews', {method:'POST', body:new URLSearchParams({place_id:id})}); const d = await r.json(); const list = document.getElementById('revList'); if(d.reviews.length === 0) list.innerHTML = "<div style='color:#aaa'>No reviews yet.</div>"; else list.innerHTML = d.reviews.map(x => `<div class="rev-item"><div style="display:flex;justify-content:space-between;color:var(--accent)"><b>${x.user}</b> <span>${x.rating}★</span></div><div style="color:var(--text-muted);font-size:0.8rem">${x.date}</div><p>${x.text}</p></div>`).join(''); }
         async function subRev() { const id = document.getElementById('revId').value; const u = document.getElementById('revName').value || "Guest"; const r = document.getElementById('revRate').value; const t = document.getElementById('revText').value; await fetch('/submit_review', {method:'POST', body:new URLSearchParams({place_id:id, user_name:u, rating:r, review_text:t})}); alert("Review Posted!"); loadReviews(id); fetchData(); }
-     async function subPlace(){ 
-    const btn = document.getElementById('subBtn'); // Now this will work!
-    const name = document.getElementById('aName').value;
-    const type = document.getElementById('aType').value;
-    
-    if(!name) return alert("Please enter a name");
-    
-    // Visual Feedback
-    if(btn) {
-        btn.disabled = true;
-        btn.innerText = "⏳ SAVING...";
-    }
-
-    try {
-        // 1. Try to find location (with fallback if it fails)
-        let finalLat = 0, finalLon = 0;
-        try {
-            console.log("Attempting geocode...");
-            const geoRes = await fetch('/geocode', {
-                method:'POST', 
-                body:new URLSearchParams({address: name + ", " + curCity})
-            });
-            const geoData = await geoRes.json();
-            if(geoData.status === 'success') {
-                finalLat = geoData.lat;
-                finalLon = geoData.lon;
+        
+        // --- SAFE ADD PLACE FUNCTION ---
+        async function subPlace(){ 
+            const btn = document.getElementById('subBtn');
+            const name = document.getElementById('aName').value;
+            const type = document.getElementById('aType').value;
+            
+            if(!name) return alert("Please enter a name");
+            
+            // CHECK IF BUTTON EXISTS BEFORE USING IT
+            if(btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ SAVING...";
             }
-        } catch(e) {
-            console.log("Geocode failed, using default location.");
+
+            try {
+                // 1. Try to find location
+                let finalLat = 0, finalLon = 0;
+                try {
+                    console.log("Attempting geocode...");
+                    const geoRes = await fetch('/geocode', {
+                        method:'POST', 
+                        body:new URLSearchParams({address: name + ", " + curCity})
+                    });
+                    const geoData = await geoRes.json();
+                    if(geoData.status === 'success') {
+                        finalLat = geoData.lat;
+                        finalLon = geoData.lon;
+                    }
+                } catch(e) { console.log("Geocode failed"); }
+
+                // 2. Send to Database
+                const response = await fetch('/add_place', {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        city: curCity,
+                        category_type: type,
+                        name: name,
+                        desc: "User Added via Web",
+                        img_url: upImg || "", 
+                        budget: "N/A",
+                        lat: finalLat,
+                        lon: finalLon,
+                        user: user || "Guest"
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("✅ Success: Place Added!");
+                    document.getElementById('addModal').style.display='none'; 
+                    fetchData();
+                } else {
+                    alert("❌ Server Error: " + data.message);
+                }
+
+            } catch (error) {
+                alert("❌ Error: " + error.message);
+            } finally {
+                // RESET BUTTON SAFELY
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerText = "SUBMIT";
+                }
+            }
         }
 
-        // 2. Send to Database
-        console.log("Sending to server...");
-        const response = await fetch('/add_place', {
-            method: 'POST',
-            body: new URLSearchParams({
-                city: curCity,
-                category_type: type,
-                name: name,
-                desc: "User Added via Web",
-                img_url: upImg || "", 
-                budget: "N/A",
-                lat: finalLat,
-                lon: finalLon,
-                user: user || "Guest"
-            })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            alert("✅ Success: Place Added!");
-            document.getElementById('addModal').style.display='none'; 
-            fetchData(); // Refresh the grid
-        } else {
-            alert("❌ Server Error: " + data.message);
-        }
-
-    } catch (error) {
-        alert("❌ Error: " + error.message);
-        console.error(error);
-    } finally {
-        if(btn) {
-            btn.disabled = false;
-            btn.innerText = "SUBMIT";
-        }
-    }
-}
         function toggleMap(){ const m=document.getElementById('map-view'); m.style.display=m.style.display==='none'?'block':'none'; if(m.style.display==='block'){if(!map){map=L.map('map-view').setView([22.07,82.14],10);L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);} setTimeout(()=>map.invalidateSize(),100);}}
         function openRouteModal(){ document.getElementById('routeModal').style.display='flex'; }
         function getLoc(){ navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;alert('Found');}); }
