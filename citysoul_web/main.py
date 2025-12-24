@@ -22,8 +22,6 @@ safe_pw = quote_plus(password)
 
 # 2. CREATE THE LINK
 # We use the safe password inside the link
-MONGO_URI = f"mongodb+srv://snepnap:{safe_pw}@cluster0.oo1itji.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-
 # --- CONNECT TO DATABASE ---
 try:
     if "YOUR_CONNECTION_STRING" in MONGO_URI:
