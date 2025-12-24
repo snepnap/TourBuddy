@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy v4.2 (Smart Search)</title>
+    <title>TourBuddy v5.0 (Final)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
@@ -25,7 +25,7 @@
         .navbar { position:fixed; top:20px; left:5%; width:90%; background:var(--glass); backdrop-filter:blur(10px); border:var(--border); border-radius:50px; padding:10px 30px; display:flex; justify-content:space-between; align-items:center; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
         .logo { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--text-main); } 
         .logo span { color:var(--accent); }
-        .nav-btn { background:rgba(128,128,128,0.1); color:var(--text-muted); border:var(--border); padding:8px 15px; border-radius:30px; cursor:pointer; transition:0.2s; }
+        .nav-btn { background:rgba(128,128,128,0.1); color:var(--text-muted); border:var(--border); padding:8px 15px; border-radius:30px; cursor:pointer; transition:0.2s; text-decoration: none; display: inline-block;}
         .nav-btn:hover { background:var(--accent); color:white; }
         .hero { text-align:center; margin-top:140px; }
         .explore-label { color:var(--accent); font-size:1rem; letter-spacing:4px; font-weight:800; margin-bottom:5px; opacity:1; text-transform:uppercase; }
@@ -65,7 +65,11 @@
             <button class="nav-btn" onclick="toggleTheme()" id="themeBtn">☀</button>
             <div id="weather" style="font-size:0.9rem; font-weight:bold; color:var(--accent)">--°C</div>
             <button class="nav-btn" onclick="toggleMap()">Map</button>
+            
+            <a href="/admin" id="adminBtn" class="nav-btn" style="display:none; background:#ef4444; color:white; border:none;">🛡️ Admin</a>
+            
             <button class="nav-btn" id="profileBtn" onclick="openProfile()" style="display:none; border-color:var(--accent); color:var(--accent);">👤 Profile</button>
+            
             <div id="authBtn" class="nav-btn" onclick="handleAuthClick()">Login</div>
         </div>
     </div>
@@ -206,12 +210,22 @@
         function ui(){ 
             const b = document.getElementById('authBtn'); 
             const p = document.getElementById('profileBtn');
+            const a = document.getElementById('adminBtn'); // THE ADMIN BUTTON
+            
             if(token) {
                 b.innerText = "Logout"; b.style.color = "var(--accent)";
                 p.style.display = "block";
+                
+                // SHOW ADMIN BUTTON IF ADMIN
+                if (role === 'admin') {
+                    a.style.display = "block";
+                } else {
+                    a.style.display = "none";
+                }
             } else {
                 b.innerText = "Login"; b.style.color = "var(--text-muted)";
                 p.style.display = "none";
+                a.style.display = "none";
             }
         }
 
@@ -241,45 +255,24 @@
             } catch(e) { alert("Error"); }
         }
 
-        // --- NEW: FIND COORDS BY NAME ---
         async function findCoordsByName() {
             const name = document.getElementById('aName').value;
             const city = document.getElementById('cityInput').value;
             const btn = event.target;
-            
-            if(!name) return alert("Please enter the place Name first!");
-            
+            if(!name) return alert("Enter Name first!");
             btn.innerText = "🔍 Searching...";
             try {
-                const r = await fetch('/geocode', {
-                    method: 'POST',
-                    body: new URLSearchParams({ address: `${name}, ${city}` })
-                });
+                const r = await fetch('/geocode', { method: 'POST', body: new URLSearchParams({ address: `${name}, ${city}` }) });
                 const d = await r.json();
                 if(d.status === 'success') {
-                    document.getElementById('aLat').value = d.lat;
-                    document.getElementById('aLon').value = d.lon;
-                    alert(`✅ Found Location: ${name}`);
-                    btn.innerText = "✅ Location Set";
-                } else {
-                    alert("Could not find place. Try 'City Center' or type manually.");
-                    btn.innerText = "🔍 Find by Name";
-                }
-            } catch(e) {
-                alert("Search Error");
-                btn.innerText = "🔍 Find by Name";
-            }
+                    document.getElementById('aLat').value = d.lat; document.getElementById('aLon').value = d.lon;
+                    alert(`✅ Found: ${name}`); btn.innerText = "✅ Set";
+                } else { alert("Not found. Try manually."); btn.innerText = "🔍 Find"; }
+            } catch(e) { alert("Error"); btn.innerText = "🔍 Find"; }
         }
 
-        function doGeo() {
-            navigator.geolocation.getCurrentPosition(p=>{
-                document.getElementById('aLat').value = p.coords.latitude;
-                document.getElementById('aLon').value = p.coords.longitude;
-                alert("✅ Used Your Current GPS!");
-            });
-        }
+        function doGeo() { navigator.geolocation.getCurrentPosition(p=>{ document.getElementById('aLat').value = p.coords.latitude; document.getElementById('aLon').value = p.coords.longitude; alert("GPS Used!"); }); }
 
-        // --- ADD PLACE ---
         function openAddModal(){ document.getElementById('addModal').style.display='flex'; }
         
         async function subPlace() {
@@ -302,7 +295,6 @@
             btn.innerText = "SUBMIT SPOT"; btn.disabled = false;
         }
 
-        // --- FETCH & RENDER ---
         async function fetchData() {
             const city = document.getElementById('cityInput').value; curCity=city;
             document.getElementById('heroCity').innerText = city.toUpperCase();
@@ -353,7 +345,6 @@
             VanillaTilt.init(document.querySelectorAll(".card"));
         }
 
-        // --- UTILS ---
         async function deleteItem(id) { if(!confirm("Delete?")) return; const fd=new FormData(); fd.append('id',id); fd.append('token',token); await fetch('/admin_delete',{method:'POST',body:fd}); fetchData(); openProfile(); }
         async function openProfile() { if(!user) return; document.getElementById('profileModal').style.display='flex'; const fd=new FormData(); fd.append('username',user); const r=await fetch('/get_user_profile',{method:'POST',body:fd}); const d=await r.json(); document.getElementById('myPlacesList').innerHTML = d.places.map(x=>`<div class="mini-card"><b>${x.name}</b> <span style="float:right;cursor:pointer;" onclick="deleteItem('${x.id}')">🗑️</span></div>`).join(''); document.getElementById('myReviewsList').innerHTML = d.reviews.map(x=>`<div class="mini-card"><b>${x.rating}⭐</b>: ${x.text}</div>`).join(''); }
         function openEditImage(id, name) { document.getElementById('editId').value = id; document.getElementById('editName').innerText = "Edit: " + name; document.getElementById('editImgModal').style.display = 'flex'; }
