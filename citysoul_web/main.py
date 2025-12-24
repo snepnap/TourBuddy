@@ -131,16 +131,81 @@ async def discover_places(city: str = Form(...), type: str = Form("places"), use
     return JSONResponse(content={"items": items, "city": city.title()})
 
 @app.post("/add_place")
-async def add_place(city: str = Form(...), category_type: str = Form(...), name: str = Form(...), desc: str = Form(...), img_url: str = Form(...), budget: str = Form(...), lat: float = Form(...), lon: float = Form(...), user: str = Form("Guest")):
+async def add_place(
+    city: str = Form(...), 
+    category_type: str = Form(...), 
+    name: str = Form(...), 
+    desc: str = Form(...), 
+    img_url: str = Form(""), 
+    budget: str = Form(...), 
+    lat: str = Form("0"), # <--- Changed to String to handle empty inputs safely
+    lon: str = Form("0"), 
+    user: str = Form("Guest")
+):
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "DB Error - Check Logs"})
+    
     if category_type == "place": category_type = "places"
     
+    # 1. Handle Image
     final_img = "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy"
     if img_url and len(img_url) > 10: final_img = img_url
 
-    new_item = {"id": f"usr{random.randint(1000,9999)}", "name": name, "category": category_type, "budget": budget, "lat": lat, "lon": lon, "desc": desc, "img": final_img, "city": city}
+    # 2. Parse User Coordinates (Handle empty or text inputs)
+    try:
+        final_lat = float(lat)
+        final_lon = float(lon)
+    except:
+        final_lat = 0.0
+        final_lon = 0.0
+
+    # 3. AUTO-LOCATION MAGIC 🌍
+    # If user didn't provide coordinates (sent 0), let's find them!
+    if final_lat == 0 or final_lon == 0:
+        print(f"🌍 Auto-locating: {name}, {city}...")
+        try:
+            async with httpx.AsyncClient() as client:
+                # Try finding exact place: "Red Fort, Delhi"
+                search_query = f"{name}, {city}"
+                resp = await client.get(
+                    f"https://nominatim.openstreetmap.org/search?q={search_query}&format=json&limit=1",
+                    headers={'User-Agent': 'TourBuddy'}, 
+                    timeout=5.0
+                )
+                data = resp.json()
+                
+                if data:
+                    final_lat = float(data[0]['lat'])
+                    final_lon = float(data[0]['lon'])
+                    print(f"✅ Found exact location: {final_lat}, {final_lon}")
+                else:
+                    # Fallback: Just find the City center
+                    print("⚠️ Exact place not found, falling back to City.")
+                    resp_city = await client.get(
+                        f"https://nominatim.openstreetmap.org/search?q={city}&format=json&limit=1",
+                        headers={'User-Agent': 'TourBuddy'}, 
+                        timeout=5.0
+                    )
+                    data_city = resp_city.json()
+                    if data_city:
+                        final_lat = float(data_city[0]['lat'])
+                        final_lon = float(data_city[0]['lon'])
+        except Exception as e:
+            print(f"❌ Geocoding Failed: {e}")
+
+    # 4. Save to Database
+    new_item = {
+        "id": f"usr{random.randint(1000,9999)}", 
+        "name": name, 
+        "category": category_type, 
+        "budget": budget, 
+        "lat": final_lat, # Uses the auto-detected numbers
+        "lon": final_lon, 
+        "desc": desc, 
+        "img": final_img, 
+        "city": city
+    }
     places_col.insert_one(new_item)
-    return JSONResponse(content={"status": "success", "message": "Added to Cloud DB!"})
+    return JSONResponse(content={"status": "success", "message": "Added with Auto-Location!"})
 
 @app.post("/admin_delete")
 async def admin_delete(city: str = Form(...), category: str = Form(...), id: str = Form(...), token: str = Form(...)):
