@@ -147,7 +147,7 @@
             <h2>Add Spot</h2>
             <input id="aName" placeholder="Name" class="input-field">
             <input id="aAddr" placeholder="Address" class="input-field">
-            <button onclick="doGeo()" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white;">Find GPS</button>
+            <button onclick="doGeo()" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer;">Find GPS</button>
             <input type="hidden" id="aLat"><input type="hidden" id="aLon">
             <select id="aType" class="input-field" style="background:#0f172a;">
                 <option value="places">Place</option>
@@ -156,7 +156,7 @@
                 <option value="hotels">Hotel</option>
             </select>
             <input type="file" id="aFile" class="input-field" onchange="readF()">
-            <button id="subBtn" onclick="subPlace()" class="action-btn">SUBMIT</button>
+            <button onclick="subPlace(this)" class="action-btn">SUBMIT</button>
         </div>
     </div>
 
@@ -305,35 +305,64 @@
         async function loadReviews(id) { const r = await fetch('/get_reviews', {method:'POST', body:new URLSearchParams({place_id:id})}); const d = await r.json(); const list = document.getElementById('revList'); if(d.reviews.length === 0) list.innerHTML = "<div style='color:#aaa'>No reviews yet.</div>"; else list.innerHTML = d.reviews.map(x => `<div class="rev-item"><div style="display:flex;justify-content:space-between;color:var(--accent)"><b>${x.user}</b> <span>${x.rating}★</span></div><div style="color:var(--text-muted);font-size:0.8rem">${x.date}</div><p>${x.text}</p></div>`).join(''); }
         async function subRev() { const id = document.getElementById('revId').value; const u = document.getElementById('revName').value || "Guest"; const r = document.getElementById('revRate').value; const t = document.getElementById('revText').value; await fetch('/submit_review', {method:'POST', body:new URLSearchParams({place_id:id, user_name:u, rating:r, review_text:t})}); alert("Review Posted!"); loadReviews(id); fetchData(); }
         
-        // --- SAFE ADD PLACE FUNCTION ---
-        async function subPlace(){ 
-            const btn = document.getElementById('subBtn');
+        // --- RESTORED doGeo FUNCTION ---
+        function doGeo() {
+            const btn = document.querySelector('button[onclick="doGeo()"]');
+            if(btn) btn.innerText = "Locating...";
+            navigator.geolocation.getCurrentPosition(
+                (p) => {
+                    document.getElementById('aLat').value = p.coords.latitude;
+                    document.getElementById('aLon').value = p.coords.longitude;
+                    if(btn) btn.innerText = "✅ GPS Found";
+                    alert("GPS Location Saved!");
+                },
+                (e) => {
+                    alert("GPS Error: " + e.message);
+                    if(btn) btn.innerText = "Find GPS";
+                }
+            );
+        }
+
+        // --- FIXED SUBPLACE (USING 'this' to avoid NULL error) ---
+        async function subPlace(btn){ 
             const name = document.getElementById('aName').value;
             const type = document.getElementById('aType').value;
+            // Get lat/lon hidden fields
+            const gLat = document.getElementById('aLat').value;
+            const gLon = document.getElementById('aLon').value;
             
             if(!name) return alert("Please enter a name");
             
-            // CHECK IF BUTTON EXISTS BEFORE USING IT
+            // Visual Feedback
             if(btn) {
                 btn.disabled = true;
                 btn.innerText = "⏳ SAVING...";
             }
 
             try {
-                // 1. Try to find location
-                let finalLat = 0, finalLon = 0;
-                try {
-                    console.log("Attempting geocode...");
-                    const geoRes = await fetch('/geocode', {
-                        method:'POST', 
-                        body:new URLSearchParams({address: name + ", " + curCity})
-                    });
-                    const geoData = await geoRes.json();
-                    if(geoData.status === 'success') {
-                        finalLat = geoData.lat;
-                        finalLon = geoData.lon;
-                    }
-                } catch(e) { console.log("Geocode failed"); }
+                // 1. Determine Location
+                // Priority: Manual GPS Button -> Auto Geocode -> User's current location -> 0,0
+                let finalLat = gLat || 0;
+                let finalLon = gLon || 0;
+
+                if(finalLat == 0) {
+                    try {
+                        console.log("Attempting geocode fallback...");
+                        const geoRes = await fetch('/geocode', {
+                            method:'POST', 
+                            body:new URLSearchParams({address: name + ", " + curCity})
+                        });
+                        const geoData = await geoRes.json();
+                        if(geoData.status === 'success') {
+                            finalLat = geoData.lat;
+                            finalLon = geoData.lon;
+                        } else {
+                            // Fallback to user location if available
+                            finalLat = lat;
+                            finalLon = lon;
+                        }
+                    } catch(e) { console.log("Geocode failed"); }
+                }
 
                 // 2. Send to Database
                 const response = await fetch('/add_place', {
@@ -364,7 +393,7 @@
             } catch (error) {
                 alert("❌ Error: " + error.message);
             } finally {
-                // RESET BUTTON SAFELY
+                // RESET BUTTON
                 if(btn) {
                     btn.disabled = false;
                     btn.innerText = "SUBMIT";
