@@ -63,6 +63,10 @@ SESSIONS = {}
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_panel(request: Request):
+    return templates.TemplateResponse("admin.html", {"request": request})
+
 @app.post("/login")
 async def login(data: dict):
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "Database Offline"})
