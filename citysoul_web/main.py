@@ -10,24 +10,30 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, ConfigurationError
+from urllib.parse import quote_plus
 
 app = FastAPI()
 
-# --- ⬇️ PASTE YOUR CONNECTION STRING BELOW ⬇️ ---
-# Example: "mongodb+srv://admin:mypassword@cluster0.abcde.mongodb.net/..."
-MONGO_URI = "mongodb+srv://snepnap:Anand@123@cluster0.oo1itji.mongodb.net/?appName=Cluster0" 
+# --- CONNECTION SETUP ---
 
-# --- SAFE DATABASE CONNECTION ---
+# 1. FIX PASSWORD SYMBOLS (The Safe Way)
+password = "Anand@123"
+safe_pw = quote_plus(password) 
+
+# 2. CREATE THE LINK
+# We use the safe password inside the link
+MONGO_URI = f"mongodb+srv://snepnap:{safe_pw}@cluster0.oo1itji.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+# --- CONNECT TO DATABASE ---
 try:
     if "YOUR_CONNECTION_STRING" in MONGO_URI:
-        print("⚠️ WARNING: You forgot to paste your MongoDB Link in main.py!")
         raise Exception("Placeholder URI detected")
         
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    
     # Test connection immediately
     client.admin.command('ping')
-    print("✅ CONNECTED TO MONGODB!")
+    print("✅ CONNECTED TO MONGODB SUCCESSFULLY!")
     
     db = client.tourbuddy_db
     places_col = db.places
@@ -39,6 +45,7 @@ except Exception as e:
     print(f"❌ DATABASE ERROR: {e}")
     print("⚠️ STARTING IN OFFLINE MODE (Data will not save)")
     IS_OFFLINE = True
+    
     # Mock collections for offline mode
     class MockCol:
         def find(self, *a, **k): return []
