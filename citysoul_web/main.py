@@ -10,23 +10,18 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
-from urllib.parse import quote_plus
 
 app = FastAPI()
 
-# --- 1. CONFIGURATION ---
-# ⚠️ CHANGE THIS PASSWORD IF YOU WANT A DIFFERENT DEFAULT ADMIN
-DEFAULT_ADMIN_PASS = "Admin@12345" 
+# --- 1. SECURE CONNECTION SETUP ---
+# We no longer type the password here. We get it from the Server's Safe.
+MONGO_URI = os.getenv("MONGO_URL")
 
-username = "snepnap"
-password = "Anand@123"
-cluster = "cluster0.oo1itji.mongodb.net"
+# Fallback check (Just in case you forgot Step 1)
+if not MONGO_URI:
+    print("❌ ERROR: MONGO_URL not found! Did you add it to Render Environment Variables?")
 
-# Safe Link Creation
-safe_pw = quote_plus(password)
-MONGO_URI = f"mongodb+srv://{username}:{safe_pw}@{cluster}/?retryWrites=true&w=majority&appName=Cluster0"
-
-# --- 2. DATABASE CONNECTION & AUTO-SETUP ---
+# --- 2. CONNECT TO DATABASE ---
 try:
     # Use certifi for SSL safety
     ca = certifi.where()
@@ -42,18 +37,15 @@ try:
     reviews_col = db.reviews
     IS_OFFLINE = False
 
-    # --- AUTO-CREATE ADMIN IF MISSING ---
-    # This ensures the admin is always in the Database, not the code.
+    # Auto-Create Admin (Secure)
+    # Note: We use a default password only if creating a NEW admin.
     if not users_col.find_one({"username": "admin"}):
         print(f"👤 Admin user missing. Creating default admin...")
         users_col.insert_one({
             "username": "admin",
-            "password": DEFAULT_ADMIN_PASS,
+            "password": "Admin@12345", # You can change this later in DB
             "role": "admin"
         })
-        print(f"✅ ADMIN CREATED! Login with User: 'admin' | Pass: '{DEFAULT_ADMIN_PASS}'")
-    else:
-        print("✅ Admin user already exists in database.")
 
 except Exception as e:
     print(f"❌ DATABASE ERROR: {e}")
@@ -88,42 +80,25 @@ async def read_root(request: Request):
 async def admin_panel(request: Request):
     return templates.TemplateResponse("admin.html", {"request": request})
 
-# --- UNIFIED DATABASE LOGIN ---
 @app.post("/login")
 async def login(data: dict):
-    if IS_OFFLINE:
-        return JSONResponse(content={"status": "error", "message": "Database Offline"})
+    if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "Database Offline"})
 
-    # 1. Search for user in MongoDB
     user = users_col.find_one({"username": data.get('username')})
-    
-    # 2. Check password
     if user and user['password'] == data.get('password'):
         token = str(random.randint(10000,99999))
         SESSIONS[token] = user['username']
-        
-        # 3. Check Role (Default to 'user' if role is missing)
         role = user.get("role", "user")
-        
         return JSONResponse(content={"status": "success", "token": token, "role": role})
         
     return JSONResponse(content={"status": "error", "message": "Invalid Credentials"})
 
-# --- DATABASE REGISTRATION ---
 @app.post("/register")
 async def register(data: dict):
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "Database Offline"})
-    
-    # 1. Check if username taken
     if users_col.find_one({"username": data.get('username')}):
         return JSONResponse(content={"status": "error", "message": "Username taken"})
-    
-    # 2. Save new user (Force role='user')
-    users_col.insert_one({
-        "username": data.get('username'), 
-        "password": data.get('password'),
-        "role": "user" 
-    })
+    users_col.insert_one({"username": data.get('username'), "password": data.get('password'), "role": "user"})
     return JSONResponse(content={"status": "success", "message": "Account Created"})
 
 @app.post("/discover_places")
@@ -158,27 +133,18 @@ async def discover_places(city: str = Form(...), type: str = Form("places"), use
 @app.post("/add_place")
 async def add_place(city: str = Form(...), category_type: str = Form(...), name: str = Form(...), desc: str = Form(...), img_url: str = Form(...), budget: str = Form(...), lat: float = Form(...), lon: float = Form(...), user: str = Form("Guest")):
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "DB Error - Check Logs"})
-    
     if category_type == "place": category_type = "places"
+    
     final_img = "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy"
     if img_url and len(img_url) > 10: final_img = img_url
 
-    new_item = {
-        "id": f"usr{random.randint(1000,9999)}", "name": name, "category": category_type, 
-        "budget": budget, "lat": lat, "lon": lon, "desc": desc, "img": final_img, "city": city
-    }
+    new_item = {"id": f"usr{random.randint(1000,9999)}", "name": name, "category": category_type, "budget": budget, "lat": lat, "lon": lon, "desc": desc, "img": final_img, "city": city}
     places_col.insert_one(new_item)
     return JSONResponse(content={"status": "success", "message": "Added to Cloud DB!"})
 
 @app.post("/admin_delete")
 async def admin_delete(city: str = Form(...), category: str = Form(...), id: str = Form(...), token: str = Form(...)):
-    # Check if this token belongs to an admin
     if token not in SESSIONS: return JSONResponse(content={"status": "error", "message": "Login required"})
-    
-    # Double check admin rights from DB (Optional but safer) or trust the session
-    # For now, we trust the login logic which only gives 'admin' role to admins.
-    # In a real app, you might check the DB again here.
-    
     places_col.delete_one({"id": id})
     return JSONResponse(content={"status": "success", "message": "Deleted"})
 
@@ -191,10 +157,7 @@ async def admin_update_image(city: str = Form(...), category: str = Form(...), i
 @app.post("/submit_review")
 async def submit_review(place_id: str = Form(...), user_name: str = Form(...), rating: int = Form(...), review_text: str = Form(...)):
     if IS_OFFLINE: return JSONResponse(content={"status": "error"})
-    reviews_col.insert_one({
-        "place_id": place_id, "user": user_name, "rating": rating, 
-        "text": review_text, "date": datetime.now().strftime("%Y-%m-%d")
-    })
+    reviews_col.insert_one({"place_id": place_id, "user": user_name, "rating": rating, "text": review_text, "date": datetime.now().strftime("%Y-%m-%d")})
     return JSONResponse(content={"status": "success"})
 
 @app.post("/get_reviews")
@@ -202,7 +165,7 @@ async def get_reviews(place_id: str = Form(...)):
     revs = list(reviews_col.find({"place_id": place_id}, {'_id': 0}))
     return JSONResponse(content={"reviews": revs})
 
-# --- UTILS ---
+# --- UTILS (Weather/Route) ---
 @app.post("/get_weather")
 async def get_weather(city: str = Form(...)):
     try:
@@ -226,10 +189,7 @@ async def geocode(address: str = Form(...)):
 
 @app.post("/plan_route")
 async def plan_route(user_lat: float = Form(...), user_lon: float = Form(...), dest_city: str = Form(...)):
-    return JSONResponse(content={"status": "success", "route": [
-        {"step":1, "name":"Start", "lat":user_lat, "lon":user_lon},
-        {"step":2, "name":dest_city, "lat":user_lat+0.01, "lon":user_lon+0.01}
-    ]})
+    return JSONResponse(content={"status": "success", "route": [{"step":1, "name":"Start", "lat":user_lat, "lon":user_lon}, {"step":2, "name":dest_city, "lat":user_lat+0.01, "lon":user_lon+0.01}]})
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
