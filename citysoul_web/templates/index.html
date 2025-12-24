@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy (v2.0)</title>
+    <title>TourBuddy v3.0 (Fixed)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
@@ -22,25 +22,20 @@
             --text-main: #0f172a; --text-muted: #475569;
         }
         body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text-main); margin:0; transition:0.3s; }
-        
         .navbar { position:fixed; top:20px; left:5%; width:90%; background:var(--glass); backdrop-filter:blur(10px); border:var(--border); border-radius:50px; padding:10px 30px; display:flex; justify-content:space-between; align-items:center; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
         .logo { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--text-main); } 
         .logo span { color:var(--accent); }
         .nav-btn { background:rgba(128,128,128,0.1); color:var(--text-muted); border:var(--border); padding:8px 15px; border-radius:30px; cursor:pointer; transition:0.2s; }
         .nav-btn:hover { background:var(--accent); color:white; }
-
         .hero { text-align:center; margin-top:140px; }
         .explore-label { color:var(--accent); font-size:1rem; letter-spacing:4px; font-weight:800; margin-bottom:5px; opacity:1; text-transform:uppercase; }
-        
         .search-box { background:var(--glass); padding:8px; border-radius:50px; display:inline-flex; width:500px; border:var(--border); margin-top:30px; }
         .search-box input { background:transparent; border:none; color:var(--text-main); padding:10px 20px; flex:1; outline:none; font-size:1.1rem; }
         .search-btn { background:var(--accent); color:white; border:none; padding:10px 30px; border-radius:40px; font-weight:bold; cursor:pointer; }
-
         .container { max-width:1200px; margin:0 auto; padding:40px 5%; }
         .tabs { display:flex; justify-content:center; gap:10px; margin-bottom:30px; flex-wrap:wrap; }
         .tab { padding:8px 20px; border-radius:30px; background:rgba(128,128,128,0.1); border:var(--border); color:var(--text-muted); cursor:pointer; transition:0.3s; }
         .tab.active, .tab:hover { background:var(--surface); border-color:var(--accent); color:var(--accent); box-shadow:0 0 15px rgba(45,212,191,0.2); }
-
         .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:25px; }
         .card { background:var(--glass); border-radius:20px; overflow:hidden; border:var(--border); transition:0.3s; position:relative; }
         .card:hover { transform:translateY(-5px); border-color:var(--accent); }
@@ -52,33 +47,26 @@
         .btn-del:hover { background: #ef4444; }
         .btn-edit { border-color: #fbbf24; color:#fbbf24; }
         .btn-edit:hover { background: #fbbf24; color:black; }
-        
         .dist-badge { position:absolute; top:15px; right:15px; background:rgba(0,0,0,0.6); color:white; padding:5px 10px; border-radius:15px; font-size:0.8rem; backdrop-filter:blur(5px); }
-
         #map-view { width:100%; height:400px; border-radius:20px; border:1px solid var(--accent); margin-bottom:30px; display:none; }
-        
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; backdrop-filter:blur(5px); }
         .modal { background:var(--surface); width:90%; max-width:500px; border-radius:30px; padding:30px; text-align:center; border:var(--border); max-height:80vh; overflow-y:auto; color:var(--text-main); position:relative; }
         .close-btn { position:absolute; top:20px; right:20px; font-size:1.5rem; cursor:pointer; color:var(--text-muted); }
         .close-btn:hover { color:var(--accent); }
-        
         .input-field { width:100%; padding:12px; background:rgba(128,128,128,0.1); border:var(--border); color:var(--text-main); border-radius:10px; margin-top:10px; box-sizing:border-box; outline:none; transition:0.3s; }
         .input-field:focus { border-color:var(--accent); background:rgba(45,212,191,0.05); }
         .action-btn { width:100%; padding:12px; margin-top:20px; border-radius:40px; background:var(--accent); color:white; border:none; font-weight:bold; cursor:pointer; transition:0.3s; }
         .action-btn:hover { opacity:0.9; transform:scale(1.02); }
-
         .auth-header { margin-bottom:20px; }
         .auth-header h2 { font-size:2rem; margin:0; color:var(--accent); font-family:'Playfair Display',serif; }
         .auth-header p { color:var(--text-muted); font-size:0.9rem; margin-top:5px; }
         .auth-toggle { margin-top:20px; font-size:0.9rem; color:var(--text-muted); }
         .auth-toggle span { color:var(--accent); cursor:pointer; font-weight:600; text-decoration:underline; }
-        
         .rev-list { text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px; background:rgba(128,128,128,0.05); padding:10px; border-radius:10px; }
         .rev-item { border-bottom:1px solid var(--border); padding:8px 0; font-size:0.9rem; }
     </style>
 </head>
 <body>
-
     <div class="navbar">
         <div class="logo">TOUR<span>BUDDY</span></div>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -149,7 +137,6 @@
             <button id="btn-find-gps" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer;">Find GPS</button>
             
             <input type="hidden" id="aLat"><input type="hidden" id="aLon">
-            
             <select id="aType" class="input-field" style="background:#0f172a;">
                 <option value="places">Place</option>
                 <option value="food">Food</option>
@@ -158,7 +145,7 @@
             </select>
             <input type="file" id="aFile" class="input-field" onchange="readF()">
             
-            <button id="btn-add-submit" class="action-btn">SUBMIT</button>
+            <button id="btn-add-submit" class="action-btn" style="border: 2px solid red;">SUBMIT (v3)</button>
         </div>
     </div>
 
@@ -200,32 +187,25 @@
     </div>
 
     <script>
-        // --- GLOBAL VARIABLES ---
-        let isDark = true;
-        let curCity="Bilaspur";
-        let curType="places";
-        let token=localStorage.getItem("tok");
-        let user=localStorage.getItem("usr");
-        let userRole=localStorage.getItem("role");
-        let lat=0;
-        let lon=0;
-        let map;
-        let routePolyline;
-        let upImg="";
-        let editImg="";
-        let isRegister=false;
-        let currentItems=[];
-
         // --- SAFE INITIALIZATION (Wait for HTML to load) ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Bind Buttons safely using JS (Prevents 'ReferenceError')
+            console.log("TourBuddy v3.0 Loaded");
+
+            // BIND BUTTONS
             const btnGeo = document.getElementById('btn-find-gps');
             const btnSub = document.getElementById('btn-add-submit');
 
-            if(btnGeo) btnGeo.addEventListener('click', doGeo);
-            if(btnSub) btnSub.addEventListener('click', subPlace);
+            if(btnGeo) {
+                console.log("GPS Button Found");
+                btnGeo.addEventListener('click', doGeo);
+            } else { console.error("GPS Button Missing"); }
 
-            // Load Initial Data
+            if(btnSub) {
+                console.log("Submit Button Found");
+                btnSub.addEventListener('click', subPlace);
+            } else { console.error("Submit Button Missing"); }
+
+            // Initial Data Load
             ui();
             if(navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -237,8 +217,10 @@
             }
         });
 
-        // --- CORE FUNCTIONS ---
+        // --- GLOBAL VARS ---
+        let isDark=true, curCity="Bilaspur", curType="places", token=localStorage.getItem("tok"), user=localStorage.getItem("usr"), userRole=localStorage.getItem("role"), lat=0, lon=0, map, routePolyline, upImg="", editImg="", isRegister=false, currentItems=[];
 
+        // --- CORE FUNCTIONS ---
         function doGeo() {
             const btn = document.getElementById('btn-find-gps');
             if(btn) btn.innerText = "Locating...";
@@ -260,6 +242,7 @@
         }
 
         async function subPlace() {
+            console.log("Submit Clicked (Safe Mode)");
             const btn = document.getElementById('btn-add-submit');
             const name = document.getElementById('aName').value;
             const type = document.getElementById('aType').value;
@@ -277,7 +260,7 @@
                 let finalLat = gLat || 0;
                 let finalLon = gLon || 0;
 
-                // Server Geocode fallback
+                // Simple Geocode Fallback
                 if(finalLat == 0) {
                     try {
                         const geoRes = await fetch('/geocode', {
@@ -325,23 +308,21 @@
             } finally {
                 if(btn) {
                     btn.disabled = false;
-                    btn.innerText = "SUBMIT";
+                    btn.innerText = "SUBMIT (v3)";
                 }
             }
         }
 
+        // --- UTILS ---
         function ui(){ const b=document.getElementById('authBtn'); b.innerText = token ? user : "Login"; if(token) b.style.color = "var(--accent)"; }
-
         function toggleTheme() {
             isDark = !isDark;
             document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
             document.getElementById('themeBtn').innerText = isDark ? '☀' : '☾';
         }
-
         async function fetchData() {
             const city = document.getElementById('cityInput').value; curCity=city;
             document.getElementById('heroCity').innerText = city.toUpperCase();
-            
             try {
                 const [w, d] = await Promise.all([
                     fetch('/get_weather', {method:'POST', body:new URLSearchParams({city:city})}).then(r=>r.json()),
@@ -351,7 +332,6 @@
                 render(d.items);
             } catch(e) { console.error(e); }
         }
-
         function render(items) {
             currentItems = items;
             const g = document.getElementById('grid'); g.innerHTML = '';
@@ -373,7 +353,7 @@
                         <div class="btn-group" style="display:flex; gap:5px;">
                             <button class="btn-sm" onclick="openDetailModal('${i.id}')">Info</button>
                             <button class="btn-sm" onclick="openReviewModal('${i.id}', '${i.name}')">Review</button>
-                            <button class="btn-sm" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=$?q=${i.lat},${i.lon}')">Nav</button>
+                            <button class="btn-sm" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}')">Nav</button>
                             ${adminControls}
                         </div>
                     </div>`;
@@ -381,7 +361,6 @@
             });
             VanillaTilt.init(document.querySelectorAll(".card"));
         }
-
         function openEditImage(id, name) { document.getElementById('editId').value = id; document.getElementById('editName').innerText = "Editing: " + name; document.getElementById('editImgModal').style.display = 'flex'; }
         function readEditFile() { const f=document.getElementById('editFile').files[0], r=new FileReader(); r.onload=()=>editImg=r.result; if(f)r.readAsDataURL(f); }
         async function submitEditImage() {
@@ -392,7 +371,6 @@
             document.getElementById('editImgModal').style.display='none';
             fetchData();
         }
-
         function toggleAuthMode() {
             isRegister = !isRegister;
             const title = document.getElementById('authTitle');
@@ -403,7 +381,6 @@
             else { title.innerText = "Welcome Back"; sub.innerText = "Please sign in to continue"; btn.innerText = "SIGN IN"; toggle.innerHTML = "New here? <span style='color:var(--accent); text-decoration:underline;'>Create an account</span>"; }
         }
         function handleAuthClick(){ if(token){localStorage.clear();location.reload();}else document.getElementById('authModal').style.display='flex'; }
-        
         async function doAuth(){ 
             const u=document.getElementById('uName').value.trim();
             const p=document.getElementById('uPass').value.trim();
@@ -419,12 +396,10 @@
             } catch(e) { alert("Auth Error"); }
         }
         async function deleteItem(id) { if(confirm("Admin: Delete this place?")) { await fetch('/admin_delete', {method:'POST', body:new URLSearchParams({city:curCity, category:curType, id:id, token:token})}); fetchData(); } }
-
-        function openDetailModal(id) { const item = currentItems.find(x => x.id === id); if(!item) return; document.getElementById('detName').innerText = item.name; document.getElementById('detImg').src = item.img; document.getElementById('detDesc').innerText = item.desc || "No description."; document.getElementById('detDist').innerText = "📍 " + item.distance; document.getElementById('detRate').innerText = "⭐ " + item.rating; document.getElementById('detNavBtn').onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=$?q=${item.lat},${item.lon}`); document.getElementById('detailModal').style.display = 'flex'; }
+        function openDetailModal(id) { const item = currentItems.find(x => x.id === id); if(!item) return; document.getElementById('detName').innerText = item.name; document.getElementById('detImg').src = item.img; document.getElementById('detDesc').innerText = item.desc || "No description."; document.getElementById('detDist').innerText = "📍 " + item.distance; document.getElementById('detRate').innerText = "⭐ " + item.rating; document.getElementById('detNavBtn').onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lon}`); document.getElementById('detailModal').style.display = 'flex'; }
         async function openReviewModal(id, name) { document.getElementById('revId').value = id; document.getElementById('revTitle').innerText = name; document.getElementById('reviewModal').style.display = 'flex'; if(user) document.getElementById('revName').value = user; loadReviews(id); }
         async function loadReviews(id) { const r = await fetch('/get_reviews', {method:'POST', body:new URLSearchParams({place_id:id})}); const d = await r.json(); const list = document.getElementById('revList'); if(d.reviews.length === 0) list.innerHTML = "<div style='color:#aaa'>No reviews yet.</div>"; else list.innerHTML = d.reviews.map(x => `<div class="rev-item"><div style="display:flex;justify-content:space-between;color:var(--accent)"><b>${x.user}</b> <span>${x.rating}★</span></div><div style="color:var(--text-muted);font-size:0.8rem">${x.date}</div><p>${x.text}</p></div>`).join(''); }
         async function subRev() { const id = document.getElementById('revId').value; const u = document.getElementById('revName').value || "Guest"; const r = document.getElementById('revRate').value; const t = document.getElementById('revText').value; await fetch('/submit_review', {method:'POST', body:new URLSearchParams({place_id:id, user_name:u, rating:r, review_text:t})}); alert("Review Posted!"); loadReviews(id); fetchData(); }
-
         function toggleMap(){ const m=document.getElementById('map-view'); m.style.display=m.style.display==='none'?'block':'none'; if(m.style.display==='block'){if(!map){map=L.map('map-view').setView([22.07,82.14],10);L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);} setTimeout(()=>map.invalidateSize(),100);}}
         function openRouteModal(){ document.getElementById('routeModal').style.display='flex'; }
         function getLoc(){ navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lon=p.coords.longitude;alert('Found');}); }
