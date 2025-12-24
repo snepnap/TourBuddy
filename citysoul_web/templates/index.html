@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy</title>
+    <title>TourBuddy (v2.0)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
@@ -146,7 +146,7 @@
             <input id="aName" placeholder="Name" class="input-field">
             <input id="aAddr" placeholder="Address" class="input-field">
             
-            <button onclick="doGeo()" id="btnGeo" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer;">Find GPS</button>
+            <button id="btn-find-gps" style="margin-top:5px; background:var(--accent); border:none; border-radius:5px; padding:5px; color:white; cursor:pointer;">Find GPS</button>
             
             <input type="hidden" id="aLat"><input type="hidden" id="aLon">
             
@@ -158,7 +158,7 @@
             </select>
             <input type="file" id="aFile" class="input-field" onchange="readF()">
             
-            <button id="subBtn" onclick="subPlace(this)" class="action-btn">SUBMIT</button>
+            <button id="btn-add-submit" class="action-btn">SUBMIT</button>
         </div>
     </div>
 
@@ -216,12 +216,33 @@
         let isRegister=false;
         let currentItems=[];
 
-        // --- CRITICAL FUNCTIONS (MOVED TO TOP TO PREVENT ERRORS) ---
-        
-        // 1. GPS FUNCTION
+        // --- SAFE INITIALIZATION (Wait for HTML to load) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Bind Buttons safely using JS (Prevents 'ReferenceError')
+            const btnGeo = document.getElementById('btn-find-gps');
+            const btnSub = document.getElementById('btn-add-submit');
+
+            if(btnGeo) btnGeo.addEventListener('click', doGeo);
+            if(btnSub) btnSub.addEventListener('click', subPlace);
+
+            // Load Initial Data
+            ui();
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    p=>{ lat=p.coords.latitude; lon=p.coords.longitude; fetchData(); }, 
+                    ()=>fetchData()
+                );
+            } else {
+                fetchData();
+            }
+        });
+
+        // --- CORE FUNCTIONS ---
+
         function doGeo() {
-            const btn = document.getElementById('btnGeo');
+            const btn = document.getElementById('btn-find-gps');
             if(btn) btn.innerText = "Locating...";
+            
             if(!navigator.geolocation) { alert("GPS not supported"); return; }
             
             navigator.geolocation.getCurrentPosition(
@@ -238,11 +259,8 @@
             );
         }
 
-        // 2. SUBMIT PLACE FUNCTION (The one that was crashing)
-        async function subPlace(btn) {
-            // Safety check: if btn is null (unlikely with 'this'), try finding by ID
-            if(!btn) btn = document.getElementById('subBtn');
-
+        async function subPlace() {
+            const btn = document.getElementById('btn-add-submit');
             const name = document.getElementById('aName').value;
             const type = document.getElementById('aType').value;
             const gLat = document.getElementById('aLat').value;
@@ -250,18 +268,16 @@
 
             if(!name) return alert("Please enter a name");
 
-            // SAFE UI UPDATE
             if(btn) {
                 btn.disabled = true;
                 btn.innerText = "⏳ SAVING...";
             }
 
             try {
-                // Determine Coordinates
                 let finalLat = gLat || 0;
                 let finalLon = gLon || 0;
 
-                // If no GPS, try server geocoding
+                // Server Geocode fallback
                 if(finalLat == 0) {
                     try {
                         const geoRes = await fetch('/geocode', {
@@ -273,13 +289,12 @@
                             finalLat = geoData.lat;
                             finalLon = geoData.lon;
                         } else {
-                            finalLat = lat; // Fallback to user location
+                            finalLat = lat; 
                             finalLon = lon;
                         }
                     } catch(e) { console.log("Geocode skipped"); }
                 }
 
-                // Send Data
                 const response = await fetch('/add_place', {
                     method: 'POST',
                     body: new URLSearchParams({
@@ -315,11 +330,7 @@
             }
         }
 
-        // --- REST OF THE LOGIC ---
-
-        function ui(){ const b=document.getElementById('authBtn'); b.innerText = token ? user : "Login"; if(token) b.style.color = "var(--accent)"; } ui();
-
-        navigator.geolocation.getCurrentPosition(p=>{ lat=p.coords.latitude; lon=p.coords.longitude; fetchData(); }, ()=>fetchData());
+        function ui(){ const b=document.getElementById('authBtn'); b.innerText = token ? user : "Login"; if(token) b.style.color = "var(--accent)"; }
 
         function toggleTheme() {
             isDark = !isDark;
@@ -347,13 +358,11 @@
             if(!items || items.length===0) { g.innerHTML='<div style="color:var(--text-muted)">No spots found.</div>'; return; }
             items.forEach((i) => {
                 const distBadge = i.distance !== "N/A" ? `<div class="dist-badge">📍 ${i.distance}</div>` : '';
-                
                 let adminControls = "";
                 if(userRole === "admin") {
                     adminControls = `<button class="btn-sm btn-edit" onclick="openEditImage('${i.id}', '${i.name}')">✏️</button>
                                      <button class="btn-sm btn-del" onclick="deleteItem('${i.id}')">🗑️</button>`;
                 }
-
                 const d = document.createElement('div'); d.className='card';
                 d.innerHTML = `
                     ${distBadge}
@@ -364,7 +373,7 @@
                         <div class="btn-group" style="display:flex; gap:5px;">
                             <button class="btn-sm" onclick="openDetailModal('${i.id}')">Info</button>
                             <button class="btn-sm" onclick="openReviewModal('${i.id}', '${i.name}')">Review</button>
-                            <button class="btn-sm" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}')">Nav</button>
+                            <button class="btn-sm" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=$?q=${i.lat},${i.lon}')">Nav</button>
                             ${adminControls}
                         </div>
                     </div>`;
@@ -373,11 +382,7 @@
             VanillaTilt.init(document.querySelectorAll(".card"));
         }
 
-        function openEditImage(id, name) {
-            document.getElementById('editId').value = id;
-            document.getElementById('editName').innerText = "Editing: " + name;
-            document.getElementById('editImgModal').style.display = 'flex';
-        }
+        function openEditImage(id, name) { document.getElementById('editId').value = id; document.getElementById('editName').innerText = "Editing: " + name; document.getElementById('editImgModal').style.display = 'flex'; }
         function readEditFile() { const f=document.getElementById('editFile').files[0], r=new FileReader(); r.onload=()=>editImg=r.result; if(f)r.readAsDataURL(f); }
         async function submitEditImage() {
             const id = document.getElementById('editId').value;
@@ -403,19 +408,19 @@
             const u=document.getElementById('uName').value.trim();
             const p=document.getElementById('uPass').value.trim();
             const endpoint = isRegister ? '/register' : '/login';
-            
-            const r = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: u, password: p })
-            });
-            const d = await r.json();
-            
-            if(d.status==='success'){ if(!isRegister) { localStorage.setItem('tok',d.token);localStorage.setItem('usr',u);localStorage.setItem('role',d.role); token=d.token;user=u;userRole=d.role; ui(); if(d.role==="admin")alert("Admin Mode Active"); } else { alert("Created! Login now."); toggleAuthMode(); return; } document.getElementById('authModal').style.display='none'; fetchData(); } else alert(d.message); 
+            try {
+                const r = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+                const d = await r.json();
+                if(d.status==='success'){ if(!isRegister) { localStorage.setItem('tok',d.token);localStorage.setItem('usr',u);localStorage.setItem('role',d.role); token=d.token;user=u;userRole=d.role; ui(); if(d.role==="admin")alert("Admin Mode Active"); } else { alert("Created! Login now."); toggleAuthMode(); return; } document.getElementById('authModal').style.display='none'; fetchData(); } else alert(d.message); 
+            } catch(e) { alert("Auth Error"); }
         }
         async function deleteItem(id) { if(confirm("Admin: Delete this place?")) { await fetch('/admin_delete', {method:'POST', body:new URLSearchParams({city:curCity, category:curType, id:id, token:token})}); fetchData(); } }
 
-        function openDetailModal(id) { const item = currentItems.find(x => x.id === id); if(!item) return; document.getElementById('detName').innerText = item.name; document.getElementById('detImg').src = item.img; document.getElementById('detDesc').innerText = item.desc || "No description."; document.getElementById('detDist').innerText = "📍 " + item.distance; document.getElementById('detRate').innerText = "⭐ " + item.rating; document.getElementById('detNavBtn').onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lon}`); document.getElementById('detailModal').style.display = 'flex'; }
+        function openDetailModal(id) { const item = currentItems.find(x => x.id === id); if(!item) return; document.getElementById('detName').innerText = item.name; document.getElementById('detImg').src = item.img; document.getElementById('detDesc').innerText = item.desc || "No description."; document.getElementById('detDist').innerText = "📍 " + item.distance; document.getElementById('detRate').innerText = "⭐ " + item.rating; document.getElementById('detNavBtn').onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=$?q=${item.lat},${item.lon}`); document.getElementById('detailModal').style.display = 'flex'; }
         async function openReviewModal(id, name) { document.getElementById('revId').value = id; document.getElementById('revTitle').innerText = name; document.getElementById('reviewModal').style.display = 'flex'; if(user) document.getElementById('revName').value = user; loadReviews(id); }
         async function loadReviews(id) { const r = await fetch('/get_reviews', {method:'POST', body:new URLSearchParams({place_id:id})}); const d = await r.json(); const list = document.getElementById('revList'); if(d.reviews.length === 0) list.innerHTML = "<div style='color:#aaa'>No reviews yet.</div>"; else list.innerHTML = d.reviews.map(x => `<div class="rev-item"><div style="display:flex;justify-content:space-between;color:var(--accent)"><b>${x.user}</b> <span>${x.rating}★</span></div><div style="color:var(--text-muted);font-size:0.8rem">${x.date}</div><p>${x.text}</p></div>`).join(''); }
         async function subRev() { const id = document.getElementById('revId').value; const u = document.getElementById('revName').value || "Guest"; const r = document.getElementById('revRate').value; const t = document.getElementById('revText').value; await fetch('/submit_review', {method:'POST', body:new URLSearchParams({place_id:id, user_name:u, rating:r, review_text:t})}); alert("Review Posted!"); loadReviews(id); fetchData(); }
