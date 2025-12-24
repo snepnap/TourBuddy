@@ -3,7 +3,7 @@ import os
 import random
 import httpx
 import math
-import certifi  # <--- NEW IMPORT
+import certifi
 from datetime import datetime
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -16,21 +16,22 @@ app = FastAPI()
 
 # --- CONNECTION SETUP ---
 
-# 1. SETUP CREDENTIALS
+# 1. CREDENTIALS
 username = "snepnap"
 password = "Anand@123"
 cluster = "cluster0.oo1itji.mongodb.net"
 
+# 2. SAFE LINK CREATION
 safe_pw = quote_plus(password)
 MONGO_URI = f"mongodb+srv://{username}:{safe_pw}@{cluster}/?retryWrites=true&w=majority&appName=Cluster0"
 
-# --- CONNECT TO DATABASE (FIXED SSL) ---
+# --- CONNECT TO DATABASE ---
 try:
-    # We add 'tlsCAFile=certifi.where()' to fix the SSL Handshake Error
+    # Use certifi to fix SSL errors
     ca = certifi.where()
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=ca)
     
-    # Test connection immediately
+    # Test connection
     client.admin.command('ping')
     print("✅ CONNECTED TO MONGODB SUCCESSFULLY!")
     
@@ -42,10 +43,8 @@ try:
 
 except Exception as e:
     print(f"❌ DATABASE ERROR: {e}")
-    print("⚠️ STARTING IN OFFLINE MODE (Data will not save)")
+    print("⚠️ STARTING IN OFFLINE MODE")
     IS_OFFLINE = True
-    
-    # Mock collections for offline mode
     class MockCol:
         def find(self, *a, **k): return []
         def find_one(self, *a, **k): return None
@@ -63,7 +62,6 @@ IMG_DIR = os.path.join(STATIC_DIR, "images")
 os.makedirs(IMG_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory="templates")
-
 SESSIONS = {}
 
 # --- ROUTES ---
@@ -83,8 +81,7 @@ async def login(data: dict):
         SESSIONS[token] = "admin"
         return JSONResponse(content={"status": "success", "token": token, "role": "admin"})
     
-    if IS_OFFLINE:
-        return JSONResponse(content={"status": "error", "message": "Database Offline"})
+    if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "Database Offline"})
 
     user = users_col.find_one({"username": data.get('username')})
     if user and user['password'] == data.get('password'):
@@ -106,18 +103,13 @@ async def register(data: dict):
 async def discover_places(city: str = Form(...), type: str = Form("places"), user_lat: float = Form(0), user_lon: float = Form(0)):
     if type in ["secret_places", "colleges"]: type = "places"
     
-    # 1. CLEAN THE CITY NAME
-    # This makes "bilaspur", "Bilaspur ", and "BILASPUR" all match the same data.
+    # FILTER BY CITY (Case Insensitive)
     target_city = city.lower().strip()
-
-    # 2. FILTER BY CATEGORY *AND* CITY
-    # We use a "case-insensitive regex" so even if data is "Bilaspur" and user types "bilaspur", it works.
     items = list(places_col.find({
         "category": type,
-        "city": {"$regex": f"^{target_city}$", "$options": "i"} 
+        "city": {"$regex": f"^{target_city}$", "$options": "i"}
     }, {'_id': 0}))
     
-    # 3. Add distance & ratings (same as before)
     for item in items:
         revs = list(reviews_col.find({"place_id": item['id']}))
         item['rating'] = round(sum(int(r['rating']) for r in revs)/len(revs), 1) if revs else 0
@@ -141,7 +133,7 @@ async def discover_places(city: str = Form(...), type: str = Form("places"), use
 async def add_place(city: str = Form(...), category_type: str = Form(...), name: str = Form(...), desc: str = Form(...), img_url: str = Form(...), budget: str = Form(...), lat: float = Form(...), lon: float = Form(...), user: str = Form("Guest")):
     if IS_OFFLINE: return JSONResponse(content={"status": "error", "message": "DB Error - Check Logs"})
     
-    if category_type in ["secret_places", "colleges"]: category_type = "places"
+    if category_type == "place": category_type = "places"
     
     final_img = "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy"
     if img_url and len(img_url) > 10: final_img = img_url
@@ -154,7 +146,8 @@ async def add_place(city: str = Form(...), category_type: str = Form(...), name:
         "lat": lat, 
         "lon": lon, 
         "desc": desc, 
-        "img": final_img
+        "img": final_img,
+        "city": city # <--- CITY SAVED HERE
     }
     places_col.insert_one(new_item)
     return JSONResponse(content={"status": "success", "message": "Added to Cloud DB!"})
@@ -212,7 +205,6 @@ async def geocode(address: str = Form(...)):
 
 @app.post("/plan_route")
 async def plan_route(user_lat: float = Form(...), user_lon: float = Form(...), dest_city: str = Form(...)):
-    # Simple Mock Route for stability
     return JSONResponse(content={"status": "success", "route": [
         {"step":1, "name":"Start", "lat":user_lat, "lon":user_lon},
         {"step":2, "name":dest_city, "lat":user_lat+0.01, "lon":user_lon+0.01}
