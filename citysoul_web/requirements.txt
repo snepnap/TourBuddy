@@ -7,3 +7,5 @@ requests
 jinja2
 pymongo
 python-dotenv
+dnspython
+email-validator
