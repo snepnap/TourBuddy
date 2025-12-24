@@ -1,0 +1,175 @@
+<script>
+    // --- SECURITY CHECK ---
+    const token = localStorage.getItem('tok');
+    const role = localStorage.getItem('role');
+
+    // If not admin, kick them out
+    if (!token || role !== 'admin') {
+        alert("Access Denied. Admins only.");
+        window.location.href = "/";
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "/";
+    }
+
+    // Change the logout link in navbar to use this function
+    document.querySelector('.navbar a').href = "javascript:logout()";
+
+    // --- YOUR DASHBOARD LOGIC ---
+    let cities = [];
+    let currentCity = null;
+    let currentCategory = null;
+
+    async function init() {
+        // Fetch cities from backend
+        const response = await fetch('/api/cities');
+        cities = await response.json();
+
+        const citySelect = document.getElementById('citySelect');
+        citySelect.innerHTML = '<option value="">Select City</option>'; // Reset
+        cities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city.charAt(0).toUpperCase() + city.slice(1);
+            citySelect.appendChild(option);
+        });
+        
+        // Populate Categories manually since they are fixed in DB structure
+        const categorySelect = document.getElementById('categorySelect');
+        const categories = ['places', 'food', 'shopping', 'hotels'];
+        categorySelect.innerHTML = '<option value="">Select Category</option>';
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+            categorySelect.appendChild(option);
+        });
+    }
+
+    async function loadItems() {
+        currentCity = document.getElementById('citySelect').value;
+        currentCategory = document.getElementById('categorySelect').value;
+
+        if (!currentCity || !currentCategory) return;
+
+        const container = document.getElementById('itemsContainer');
+        container.innerHTML = '<div class="loading">Loading items...</div>';
+
+        try {
+            // Use the token for authentication
+            const response = await fetch(`/admin/api/items/${currentCity}/${currentCategory}?token=${token}`);
+            const items = await response.json();
+
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#999;">No items found.</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                // Safe handling of quotes for onclick
+                const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
+                
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div>
+                        <img src="${item.img}" class="item-image" onerror="this.src='https://placehold.co/400'">
+                    </div>
+                    <div class="item-body">
+                        <h3>${item.name}</h3>
+                        <p>ID: ${item.id} | Rating: ${item.rating}</p>
+                        <div class="item-actions">
+                            <button onclick="openEditModal(${safeItem})" class="success">✏️ Edit</button>
+                            <button onclick="deleteItem('${item.id}')" class="danger">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        } catch (error) {
+            container.innerHTML = '<p style="color:red;">Error loading items</p>';
+        }
+    }
+
+    // --- MODAL FUNCTIONS ---
+    let editId = null;
+
+    function openEditModal(item) {
+        editId = item.id;
+        document.getElementById('editName').value = item.name;
+        document.getElementById('editCategory').value = item.category;
+        document.getElementById('editRating').value = item.rating;
+        document.getElementById('editBudget').value = item.budget;
+        document.getElementById('editDesc').value = item.desc;
+        document.getElementById('editLat').value = item.lat || 0;
+        document.getElementById('editLon').value = item.lon || 0;
+        document.getElementById('editModal').classList.add('active');
+        
+        // Handle Edit Submit
+        document.getElementById('editForm').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // 1. Update Text Data
+            const formData = new FormData();
+            formData.append('name', document.getElementById('editName').value);
+            formData.append('desc', document.getElementById('editDesc').value);
+            formData.append('rating', document.getElementById('editRating').value);
+            formData.append('budget', document.getElementById('editBudget').value);
+            formData.append('lat', document.getElementById('editLat').value);
+            formData.append('lon', document.getElementById('editLon').value);
+            formData.append('token', token);
+
+            await fetch(`/admin/api/edit/${currentCity}/${currentCategory}/${editId}`, {
+                method: 'POST', body: formData
+            });
+
+            // 2. Upload Image (If selected)
+            const fileInput = document.getElementById('editImageFile');
+            if(fileInput.files.length > 0) {
+                const imgData = new FormData();
+                const reader = new FileReader();
+                reader.readAsDataURL(fileInput.files[0]);
+                reader.onload = async () => {
+                    const base64 = reader.result.split(',')[1]; // Get raw base64
+                    const body = new URLSearchParams();
+                    body.append('token', token);
+                    body.append('img_data', base64); // Send as base64 string
+                    
+                    await fetch(`/admin/api/upload/${currentCity}/${currentCategory}/${editId}`, {
+                        method: 'POST', body: body
+                    });
+                    finalizeEdit();
+                }
+            } else {
+                finalizeEdit();
+            }
+        };
+    }
+
+    function finalizeEdit() {
+        alert("Updated!");
+        closeEditModal();
+        loadItems();
+    }
+
+    function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
+    function openAddModal() { document.getElementById('addModal').classList.add('active'); }
+
+    async function deleteItem(id) {
+        if(!confirm("Delete this item?")) return;
+        await fetch(`/admin_delete`, {
+            method: 'POST', 
+            body: new URLSearchParams({city: currentCity, category: currentCategory, id: id, token: token})
+        });
+        loadItems();
+    }
+
+    window.addEventListener('load', init);
+</script>
+</body>
+</html>

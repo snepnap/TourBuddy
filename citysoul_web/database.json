@@ -1,0 +1,788 @@
+{
+    "bilaspur": {
+        "events": [
+            "\ud83c\udfad Raut Nacha Mahotsav",
+            "\ud83c\udf71 Food Fest",
+            "\ud83c\udfaa Bilaspur Carnival",
+            "\ud83c\udfa8 Art & Culture Week",
+            "\ud83c\udfb5 Music Festival"
+        ],
+        "places": [
+            {
+                "id": "b1",
+                "name": "Mahamaya Temple",
+                "rating": 5.0,
+                "category": "Spiritual",
+                "budget": "Free",
+                "lat": 22.2922,
+                "lon": 82.167,
+                "desc": "Ancient Shakti Peeth in Ratanpur.",
+                "img": "static/images/mahamaya.jpg",
+                "vr": "https://pannellum.org/images/alma.jpg",
+                "review_count": 2,
+                "distance": "470.5 km"
+            },
+            {
+                "id": "b2",
+                "name": "Kanan Pendari Zoo",
+                "rating": 0,
+                "category": "Wildlife",
+                "budget": "\u20b9",
+                "lat": 22.1264,
+                "lon": 82.0833,
+                "desc": "Zoological park housing white tigers.",
+                "img": "static/images/zoo.jpg",
+                "vr": "https://pannellum.org/images/bma-0.jpg",
+                "review_count": 0,
+                "distance": "490.4 km"
+            },
+            {
+                "id": "b3",
+                "name": "Achanakmar Tiger Reserve",
+                "rating": 0,
+                "category": "Adventure",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.4842,
+                "lon": 81.7451,
+                "desc": "Dense biosphere reserve with wild tigers.",
+                "img": "static/images/tiger.jpg",
+                "review_count": 0,
+                "distance": "482.4 km"
+            },
+            {
+                "id": "b4",
+                "name": "Khutaghat Dam",
+                "rating": 0,
+                "category": "Picnic Spot",
+                "budget": "Free",
+                "lat": 22.2848,
+                "lon": 82.1671,
+                "desc": "Best picnic Spot In Bilaspur.",
+                "img": "static/images/1-kutaghat-dam-bilaspur-chhattisgarh-khutaghat-attr-hero.jpg",
+                "vr": "https://pannellum.org/images/alma.jpg",
+                "review_count": 0,
+                "distance": "471.1 km"
+            },
+            {
+                "id": "b5",
+                "name": "Ratanpur Fort",
+                "rating": 0,
+                "category": "Historical",
+                "budget": "Free",
+                "lat": 22.2985,
+                "lon": 82.1804,
+                "desc": "Ancient fort with historical significance.",
+                "img": "/static/images/update_b5_2543.jpg",
+                "review_count": 0,
+                "distance": "469.1 km"
+            }
+        ],
+        "food": [
+            {
+                "id": "usr6426",
+                "name": "Hamar Millet Cafe",
+                "rating": 4.3,
+                "category": "Cafe",
+                "budget": "\u20b9",
+                "lat": 22.0895,
+                "lon": 82.1412,
+                "desc": "Healthy millet-based cuisine.",
+                "img": "/static/images/bilaspur_8849.jpg"
+            },
+            {
+                "id": "bf1",
+                "name": "Chhattisgarhi Thali House",
+                "rating": 4.6,
+                "category": "Local",
+                "budget": "\u20b9",
+                "lat": 22.09,
+                "lon": 82.14,
+                "desc": "Authentic Bore Baasi and local delicacies.",
+                "img": "https://images.unsplash.com/photo-1589302168068-964664d93dc0"
+            },
+            {
+                "id": "bf2",
+                "name": "Spice Paradise",
+                "rating": 4.5,
+                "category": "Multi-Cuisine",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.0915,
+                "lon": 82.1388,
+                "desc": "Multicuisine restaurant with local flavors.",
+                "img": "https://images.unsplash.com/photo-1495598322334-69351cf0b9b2"
+            },
+            {
+                "id": "bf3",
+                "name": "The Bilaspur Bake House",
+                "rating": 4.4,
+                "category": "Bakery",
+                "budget": "\u20b9",
+                "lat": 22.088,
+                "lon": 82.135,
+                "desc": "Fresh bakery items and pastries.",
+                "img": "https://images.unsplash.com/photo-1578985545062-69928b1d9587"
+            },
+            {
+                "id": "bf4",
+                "name": "River Dhabha",
+                "rating": 4.2,
+                "category": "Dhabha",
+                "budget": "\u20b9",
+                "lat": 22.285,
+                "lon": 82.168,
+                "desc": "Traditional roadside dhabha with authentic taste.",
+                "img": "https://images.unsplash.com/photo-1586190936615-61aea2afb756"
+            }
+        ],
+        "hotels": [
+            {
+                "id": "bh1",
+                "name": "Courtyard Marriott",
+                "rating": 5.0,
+                "category": "Luxury",
+                "budget": "\u20b9\u20b9\u20b9\u20b9",
+                "lat": 22.0916,
+                "lon": 82.1388,
+                "desc": "Top luxury hotel with pool and spa.",
+                "img": "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb"
+            },
+            {
+                "id": "bh2",
+                "name": "Hotel Royal Palace",
+                "rating": 4.6,
+                "category": "Mid-Range",
+                "budget": "\u20b9\u20b9\u20b9",
+                "lat": 22.0895,
+                "lon": 82.1415,
+                "desc": "Comfortable accommodation with modern amenities.",
+                "img": "https://images.unsplash.com/photo-1631049307264-da0ec9d70304"
+            },
+            {
+                "id": "bh3",
+                "name": "The Grand Bilaspur",
+                "rating": 4.4,
+                "category": "Luxury",
+                "budget": "\u20b9\u20b9\u20b9\u20b9",
+                "lat": 22.0925,
+                "lon": 82.1395,
+                "desc": "Grand hotel with conference facilities.",
+                "img": "https://images.unsplash.com/photo-1566073771259-6a8506099945"
+            },
+            {
+                "id": "bh4",
+                "name": "Hotel City Center",
+                "rating": 4.2,
+                "category": "Budget",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.087,
+                "lon": 82.14,
+                "desc": "Budget-friendly hotel in city center.",
+                "img": "https://images.unsplash.com/photo-1520592417256-c037bb90f0b3"
+            },
+            {
+                "id": "bh5",
+                "name": "Vatika Hotel & Resorts",
+                "rating": 4.5,
+                "category": "Mid-Range",
+                "budget": "\u20b9\u20b9\u20b9",
+                "lat": 22.089,
+                "lon": 82.138,
+                "desc": "Family-friendly hotel with gardens.",
+                "img": "https://images.unsplash.com/photo-1559583109-3185d13f3c07"
+            }
+        ],
+        "shopping": [
+            {
+                "id": "usr6443",
+                "name": "City Mall 36 Bilaspur",
+                "rating": 4.3,
+                "category": "Mall",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.0937133,
+                "lon": 82.1252905,
+                "desc": "Multi-level shopping mall with stores.",
+                "img": "/static/images/bilaspur_2086.jpg"
+            },
+            {
+                "id": "bs1",
+                "name": "Bilaspur Bazaar",
+                "rating": 4.4,
+                "category": "Traditional Market",
+                "budget": "\u20b9",
+                "lat": 22.0892,
+                "lon": 82.1402,
+                "desc": "Traditional market with local crafts.",
+                "img": "https://images.unsplash.com/photo-1604739693418-50f76a0ae345"
+            },
+            {
+                "id": "bs2",
+                "name": "Chhattisgarhi Handicraft Hub",
+                "rating": 4.7,
+                "category": "Handicrafts",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.0875,
+                "lon": 82.1422,
+                "desc": "Authentic handicrafts and local artisan work.",
+                "img": "https://images.unsplash.com/photo-1599423300746-b6250726f1d6"
+            },
+            {
+                "id": "bs3",
+                "name": "Silk & Saree Palace",
+                "rating": 4.5,
+                "category": "Textiles",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.088,
+                "lon": 82.139,
+                "desc": "Premium silk sarees and traditional wear.",
+                "img": "https://images.unsplash.com/photo-1595777707802-21b287f3a82f"
+            }
+        ]
+    },
+    "raipur": {
+        "events": [
+            "\ud83c\udfa4 Arijit Singh Live",
+            "\ud83d\udecd\ufe0f Handloom Expo"
+        ],
+        "places": [
+            {
+                "id": "r1",
+                "name": "Marine Drive",
+                "rating": 4.6,
+                "category": "Fun",
+                "budget": "Free",
+                "lat": 21.25,
+                "lon": 81.65,
+                "desc": "Telibandha Talab nightlife.",
+                "img": "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7"
+            },
+            {
+                "id": "r2",
+                "name": "Nandan Van Zoo",
+                "rating": 4.4,
+                "category": "Wildlife",
+                "budget": "\u20b9",
+                "lat": 21.2514,
+                "lon": 81.6296,
+                "desc": "Jungle Safari.",
+                "img": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Nandan_Van_Raipur.jpg"
+            },
+            {
+                "id": "r3",
+                "name": "Purkhouti Muktangan",
+                "rating": 4.7,
+                "category": "Culture",
+                "budget": "\u20b9",
+                "lat": 21.18,
+                "lon": 81.72,
+                "desc": "Open-air tribal museum.",
+                "img": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Purkhouti_Muktangan.jpg"
+            }
+        ],
+        "food": [
+            {
+                "id": "rf1",
+                "name": "Gadh Kalewa",
+                "rating": 4.9,
+                "category": "Cultural",
+                "budget": "\u20b9",
+                "lat": 21.24,
+                "lon": 81.62,
+                "desc": "Traditional food court.",
+                "img": "https://images.unsplash.com/photo-1504674900247-0877df9cc836"
+            }
+        ],
+        "shopping": [],
+        "hotels": []
+    },
+    "jagdalpur": {
+        "events": [
+            "\ud83c\udfde\ufe0f Bastar Dussehra"
+        ],
+        "places": [
+            {
+                "id": "j1",
+                "name": "Chitrakote Falls",
+                "rating": 5.0,
+                "category": "Nature",
+                "budget": "Free",
+                "lat": 19.1213,
+                "lon": 81.7032,
+                "desc": "The Niagara of India.",
+                "img": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Chitrakot_Waterfall_Jagdalpur.jpg"
+            },
+            {
+                "id": "j2",
+                "name": "Tirathgarh Falls",
+                "rating": 4.8,
+                "category": "Nature",
+                "budget": "\u20b9",
+                "lat": 18.9133,
+                "lon": 81.8667,
+                "desc": "Stunning tiered waterfall.",
+                "img": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Tirathgarh_Waterfall.jpg"
+            }
+        ],
+        "food": [
+            {
+                "id": "jf1",
+                "name": "Amma's Kitchen",
+                "rating": 4.7,
+                "category": "Tribal",
+                "budget": "\u20b9",
+                "lat": 19.076,
+                "lon": 81.7833,
+                "desc": "Homemade-style tribal food.",
+                "img": "https://images.unsplash.com/photo-1603052875003-1b6f3e6f3a3b"
+            },
+            {
+                "id": "jf2",
+                "name": "Chhattisgarhi Kitchen",
+                "rating": 4.5,
+                "category": "Local",
+                "budget": "\u20b9",
+                "lat": 19.078,
+                "lon": 81.785,
+                "desc": "Local delicacies and snacks.",
+                "img": "https://images.unsplash.com/photo-1589302168068-964664d93dc0"
+            }
+        ],
+        "shopping": [
+            {
+                "id": "js1",
+                "name": "Bastar Handicrafts",
+                "rating": 4.8,
+                "category": "Handicrafts",
+                "budget": "\u20b9\u20b9",
+                "lat": 19.063,
+                "lon": 81.783,
+                "desc": "Authentic Bastar handicrafts.",
+                "img": "https://images.unsplash.com/photo-1599423300746-b6250726f1d6"
+            },
+            {
+                "id": "js2",
+                "name": "Tribal Art Gallery",
+                "rating": 4.6,
+                "category": "Art",
+                "budget": "\u20b9\u20b9",
+                "lat": 19.065,
+                "lon": 81.785,
+                "desc": "Tribal art and paintings.",
+                "img": "https://images.unsplash.com/photo-1595777707802-21b287f3a82f"
+            }
+        ],
+        "hotels": [
+            {
+                "id": "jh1",
+                "name": "Hotel Chitrakoot",
+                "rating": 4.5,
+                "category": "Mid-Range",
+                "budget": "\u20b9\u20b9\u20b9",
+                "lat": 19.118,
+                "lon": 81.706,
+                "desc": "Comfortable hotel near the falls.",
+                "img": "https://images.unsplash.com/photo-1559583109-3185d13f3c07"
+            },
+            {
+                "id": "jh2",
+                "name": "Bastar Palace",
+                "rating": 4.7,
+                "category": "Luxury",
+                "budget": "\u20b9\u20b9\u20b9\u20b9",
+                "lat": 19.07,
+                "lon": 81.709,
+                "desc": "Heritage hotel with modern amenities.",
+                "img": "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb"
+            }
+        ]
+    },
+    "durg": {
+        "events": [
+            "\ud83c\udfad Durg Carnival",
+            "\ud83c\udfed Industrial Fair",
+            "\ud83c\udfb5 Raigarh Music Festival"
+        ],
+        "places": [
+            {
+                "id": "d1",
+                "name": "Dalmidai Park",
+                "rating": 4.3,
+                "category": "Recreation",
+                "budget": "Free",
+                "lat": 21.1903,
+                "lon": 81.2726,
+                "desc": "Beautiful park with walking trails.",
+                "img": "https://images.unsplash.com/photo-1469022563149-aa64dbd37dae"
+            },
+            {
+                "id": "d2",
+                "name": "Shri Hanuman Temple",
+                "rating": 4.8,
+                "category": "Spiritual",
+                "budget": "Free",
+                "lat": 21.1925,
+                "lon": 81.274,
+                "desc": "Ancient temple with historical importance.",
+                "img": "https://images.unsplash.com/photo-1548013146-72479768bada"
+            },
+            {
+                "id": "d3",
+                "name": "Samad Lake",
+                "rating": 4.5,
+                "category": "Picnic Spot",
+                "budget": "Free",
+                "lat": 21.185,
+                "lon": 81.265,
+                "desc": "Serene lake perfect for picnicking.",
+                "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
+            }
+        ],
+        "food": [
+            {
+                "id": "df1",
+                "name": "Durg Delights",
+                "rating": 4.4,
+                "category": "Local",
+                "budget": "\u20b9",
+                "lat": 21.189,
+                "lon": 81.2715,
+                "desc": "Authentic Chhattisgarhi cuisine.",
+                "img": "https://images.unsplash.com/photo-1589302168068-964664d93dc0"
+            },
+            {
+                "id": "df2",
+                "name": "The Durg Bistro",
+                "rating": 4.6,
+                "category": "Multi-Cuisine",
+                "budget": "\u20b9\u20b9",
+                "lat": 21.19,
+                "lon": 81.272,
+                "desc": "Continental and Indian fusion.",
+                "img": "https://images.unsplash.com/photo-1495521821757-a1efb6729352"
+            }
+        ],
+        "hotels": [
+            {
+                "id": "dh1",
+                "name": "Hotel Durg Palace",
+                "rating": 4.5,
+                "category": "Mid-Range",
+                "budget": "\u20b9\u20b9\u20b9",
+                "lat": 21.1895,
+                "lon": 81.2725,
+                "desc": "Comfortable stay with good amenities.",
+                "img": "https://images.unsplash.com/photo-1631049307264-da0ec9d70304"
+            }
+        ],
+        "shopping": [
+            {
+                "id": "ds1",
+                "name": "Durg Central Mall",
+                "rating": 4.2,
+                "category": "Mall",
+                "budget": "\u20b9\u20b9",
+                "lat": 21.1905,
+                "lon": 81.2735,
+                "desc": "Shopping destination with multiple brands.",
+                "img": "https://images.unsplash.com/photo-1604739693418-50f76a0ae345"
+            }
+        ]
+    },
+    "raigarh": {
+        "events": [
+            "\ud83c\udfaa Raigarh Festival",
+            "\ud83c\udfa8 Art Exhibition"
+        ],
+        "places": [
+            {
+                "id": "rg1",
+                "name": "Keshkal Caves",
+                "rating": 4.7,
+                "category": "Adventure",
+                "budget": "\u20b9",
+                "lat": 21.8833,
+                "lon": 82.3667,
+                "desc": "Natural caves with scenic beauty.",
+                "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
+            },
+            {
+                "id": "rg2",
+                "name": "Raigarh Fort",
+                "rating": 4.6,
+                "category": "Historical",
+                "budget": "Free",
+                "lat": 21.89,
+                "lon": 82.375,
+                "desc": "Ancient fort with panoramic views.",
+                "img": "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f"
+            },
+            {
+                "id": "rg3",
+                "name": "Ramakrishna Beach",
+                "rating": 4.4,
+                "category": "Nature",
+                "budget": "Free",
+                "lat": 21.88,
+                "lon": 82.37,
+                "desc": "Peaceful riverside spot.",
+                "img": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+            }
+        ],
+        "food": [
+            {
+                "id": "rgf1",
+                "name": "Raigarh Kitchen",
+                "rating": 4.5,
+                "category": "Local",
+                "budget": "\u20b9",
+                "lat": 21.885,
+                "lon": 82.368,
+                "desc": "Traditional local delicacies.",
+                "img": "https://images.unsplash.com/photo-1589302168068-964664d93dc0"
+            },
+            {
+                "id": "rgf2",
+                "name": "Spice Garden",
+                "rating": 4.3,
+                "category": "Multi-Cuisine",
+                "budget": "\u20b9\u20b9",
+                "lat": 21.888,
+                "lon": 82.372,
+                "desc": "Diverse cuisine options.",
+                "img": "https://images.unsplash.com/photo-1495521821757-a1efb6729352"
+            }
+        ],
+        "hotels": [
+            {
+                "id": "rgh1",
+                "name": "Hotel Raigarh Inn",
+                "rating": 4.4,
+                "category": "Mid-Range",
+                "budget": "\u20b9\u20b9\u20b9",
+                "lat": 21.887,
+                "lon": 82.371,
+                "desc": "Budget-friendly with good service.",
+                "img": "https://images.unsplash.com/photo-1559583109-3185d13f3c07"
+            }
+        ],
+        "shopping": [
+            {
+                "id": "rgs1",
+                "name": "Raigarh Bazaar",
+                "rating": 4.3,
+                "category": "Traditional Market",
+                "budget": "\u20b9",
+                "lat": 21.884,
+                "lon": 82.365,
+                "desc": "Local market with traditional goods.",
+                "img": "https://images.unsplash.com/photo-1604739693418-50f76a0ae345"
+            }
+        ]
+    },
+    "korba": {
+        "events": [
+            "\u26a1 Industrial Exhibition",
+            "\ud83c\udfad Korba Cultural Festival"
+        ],
+        "places": [
+            {
+                "id": "k1",
+                "name": "Hasdev Reservoir",
+                "rating": 4.6,
+                "category": "Nature",
+                "budget": "Free",
+                "lat": 22.3667,
+                "lon": 82.65,
+                "desc": "Beautiful reservoir for boating.",
+                "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
+            },
+            {
+                "id": "k2",
+                "name": "Maniyari Falls",
+                "rating": 4.5,
+                "category": "Nature",
+                "budget": "Free",
+                "lat": 22.35,
+                "lon": 82.62,
+                "desc": "Scenic waterfall in dense forest.",
+                "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
+            }
+        ],
+        "food": [
+            {
+                "id": "kf1",
+                "name": "Korba Eatery",
+                "rating": 4.4,
+                "category": "Local",
+                "budget": "\u20b9",
+                "lat": 22.36,
+                "lon": 82.64,
+                "desc": "Local Chhattisgarhi food.",
+                "img": "https://images.unsplash.com/photo-1589302168068-964664d93dc0"
+            }
+        ],
+        "hotels": [
+            {
+                "id": "kh1",
+                "name": "Hotel Korba",
+                "rating": 4.3,
+                "category": "Budget",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.362,
+                "lon": 82.642,
+                "desc": "Basic but comfortable accommodation.",
+                "img": "https://images.unsplash.com/photo-1520592417256-c037bb90f0b3"
+            }
+        ],
+        "shopping": [
+            {
+                "id": "ks1",
+                "name": "Korba Market",
+                "rating": 4.2,
+                "category": "Traditional Market",
+                "budget": "\u20b9",
+                "lat": 22.361,
+                "lon": 82.641,
+                "desc": "Local shopping center.",
+                "img": "https://images.unsplash.com/photo-1604739693418-50f76a0ae345"
+            }
+        ]
+    },
+    "rajnandgaon": {
+        "events": [
+            "\ud83c\udfaa Rajnandgaon Fair",
+            "\ud83c\udf3e Harvest Festival"
+        ],
+        "places": [
+            {
+                "id": "rn1",
+                "name": "Ravishankar Lake",
+                "rating": 4.5,
+                "category": "Recreation",
+                "budget": "Free",
+                "lat": 22.7167,
+                "lon": 81.05,
+                "desc": "Peaceful lake for boating and picnics.",
+                "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
+            },
+            {
+                "id": "rn2",
+                "name": "Marble Rocks",
+                "rating": 4.7,
+                "category": "Nature",
+                "budget": "\u20b9",
+                "lat": 22.72,
+                "lon": 81.06,
+                "desc": "Stunning marble formations.",
+                "img": "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f"
+            }
+        ],
+        "food": [
+            {
+                "id": "rnf1",
+                "name": "Rajnandgaon Dhabha",
+                "rating": 4.4,
+                "category": "Dhabha",
+                "budget": "\u20b9",
+                "lat": 22.715,
+                "lon": 81.055,
+                "desc": "Traditional roadside dhabha.",
+                "img": "https://images.unsplash.com/photo-1586190936615-61aea2afb756"
+            }
+        ],
+        "hotels": [
+            {
+                "id": "rnh1",
+                "name": "Hotel Rajnandgaon",
+                "rating": 4.3,
+                "category": "Budget",
+                "budget": "\u20b9\u20b9",
+                "lat": 22.716,
+                "lon": 81.056,
+                "desc": "Basic amenities at affordable prices.",
+                "img": "https://images.unsplash.com/photo-1520592417256-c037bb90f0b3"
+            }
+        ],
+        "shopping": [
+            {
+                "id": "rns1",
+                "name": "Rajnandgaon Bazaar",
+                "rating": 4.2,
+                "category": "Traditional Market",
+                "budget": "\u20b9",
+                "lat": 22.714,
+                "lon": 81.054,
+                "desc": "Traditional market with local crafts.",
+                "img": "https://images.unsplash.com/photo-1604739693418-50f76a0ae345"
+            }
+        ]
+    },
+    "bastar": {
+        "events": [
+            "\ud83c\udfaa Bastar Dussehra",
+            "\ud83c\udfa8 Tribal Art Festival"
+        ],
+        "places": [
+            {
+                "id": "bs1",
+                "name": "Chitrakote Falls",
+                "rating": 5.0,
+                "category": "Nature",
+                "budget": "Free",
+                "lat": 19.1213,
+                "lon": 81.7032,
+                "desc": "Niagara of India - spectacular waterfall.",
+                "img": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Chitrakot_Waterfall_Jagdalpur.jpg"
+            },
+            {
+                "id": "bs2",
+                "name": "Bastar Palace",
+                "rating": 4.6,
+                "category": "Historical",
+                "budget": "\u20b9",
+                "lat": 19.063,
+                "lon": 81.783,
+                "desc": "Historical palace with architectural beauty.",
+                "img": "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f"
+            }
+        ],
+        "food": [
+            {
+                "id": "bsf1",
+                "name": "Tribal Cuisine House",
+                "rating": 4.7,
+                "category": "Tribal",
+                "budget": "\u20b9",
+                "lat": 19.064,
+                "lon": 81.784,
+                "desc": "Authentic tribal food experience.",
+                "img": "https://images.unsplash.com/photo-1589302168068-964664d93dc0"
+            }
+        ],
+        "hotels": [
+            {
+                "id": "bsh1",
+                "name": "Bastar Heritage Hotel",
+                "rating": 4.5,
+                "category": "Mid-Range",
+                "budget": "\u20b9\u20b9\u20b9",
+                "lat": 19.065,
+                "lon": 81.785,
+                "desc": "Heritage hotel with tribal decor.",
+                "img": "https://images.unsplash.com/photo-1559583109-3185d13f3c07"
+            }
+        ],
+        "shopping": [
+            {
+                "id": "bss1",
+                "name": "Bastar Handicrafts Market",
+                "rating": 4.8,
+                "category": "Handicrafts",
+                "budget": "\u20b9\u20b9",
+                "lat": 19.062,
+                "lon": 81.782,
+                "desc": "Authentic tribal handicrafts.",
+                "img": "https://images.unsplash.com/photo-1599423300746-b6250726f1d6"
+            }
+        ]
+    }
+}
