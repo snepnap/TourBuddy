@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy AI v7.4 (Final Fix)</title>
+    <title>TourBuddy AI v7.5 (Final Fixed)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <style>
@@ -12,11 +12,7 @@
         
         /* Light Theme */
         [data-theme="light"] {
-            --bg: #f8fafc; 
-            --surface: #ffffff; 
-            --accent: #0d9488; 
-            --text: #0f172a; 
-            --border: #cbd5e1;
+            --bg: #f8fafc; --surface: #ffffff; --accent: #0d9488; --text: #0f172a; --border: #cbd5e1;
         }
 
         body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); margin:0; transition: background 0.3s, color 0.3s; }
@@ -88,7 +84,6 @@
             <button class="tab" onclick="switchTab('food', this)">Food</button>
             <button class="tab" onclick="switchTab('hotels', this)">Stays</button>
         </div>
-        
         <div class="grid" id="grid"></div>
     </div>
 
@@ -157,10 +152,12 @@
 
     <div id="authModal" class="modal-overlay">
         <div class="modal">
-            <h2>Login</h2>
+            <span onclick="document.getElementById('authModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
+            <h2 id="authTitle">Welcome Back</h2>
             <input id="uName" placeholder="Username" class="input-field">
             <input id="uPass" type="password" placeholder="Password" class="input-field">
-            <button onclick="doLogin()" class="action-btn">LOGIN</button>
+            <button onclick="doAuth()" id="authActionBtn" class="action-btn">SIGN IN</button>
+            <p id="authToggleText" style="margin-top:15px; cursor:pointer; font-size:0.9rem; color:var(--accent);" onclick="toggleAuthMode()">New here? Create an account</p>
         </div>
     </div>
 
@@ -170,16 +167,22 @@
         let user = localStorage.getItem("usr");
         let curType = "places"; 
         let isDark = true;
+        let isRegister = false; 
+        let lat = 0, lon = 0; 
 
         function init() {
             if(token) {
                 document.getElementById('authBtn').innerText = "Logout";
                 if(role === 'admin') document.getElementById('adminBtn').style.display = "block";
             }
-            fetchData();
+            // Get Geo & Fetch
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    lat = p.coords.latitude; lon = p.coords.longitude; fetchData(); 
+                }, () => fetchData());
+            } else { fetchData(); }
         }
 
-        // --- THEME TOGGLE LOGIC ---
         function toggleTheme() {
             isDark = !isDark;
             document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -193,6 +196,8 @@
             const fd = new FormData(); 
             fd.append('city', city);
             fd.append('type', curType);
+            fd.append('user_lat', lat); 
+            fd.append('user_lon', lon); 
             
             try {
                 const r = await fetch('/discover_places', {method:'POST', body:fd});
@@ -210,8 +215,6 @@
 
                 d.items.forEach(i => {
                     if (!i) return; 
-
-                    // Robust Data Cleaning
                     const safeName = (i.name || "Unknown").replace(/'/g, "\\'");
                     const safeDesc = (i.desc || "").replace(/'/g, "\\'").replace(/"/g, ""); 
                     const safeImg = i.img || "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy";
@@ -235,24 +238,16 @@
                                 <div class="btn-group">
                                     <button class="btn-sm" onclick="openDetail('${safeName}', '${safeImg}', '${safeDesc}', '${safeDist}', '${safeRate}')">Info</button>
                                     <button class="btn-sm" onclick="openRev('${i.id}', '${safeName}')">Review</button>
-                                    <button class="btn-sm btn-nav" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${i.lat},${i.lon}')">Nav ↗</button>
+                                    <button class="btn-sm btn-nav" onclick="window.open('http://googleusercontent.com/maps.google.com/?q=${i.lat},${i.lon}')">Nav ↗</button>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
-                
-                if (typeof VanillaTilt !== 'undefined') {
-                    VanillaTilt.init(document.querySelectorAll(".card"));
-                }
-
-            } catch(e) {
-                console.error("Fetch Error:", e);
-                document.getElementById('grid').innerHTML = '<p style="color:#ef4444; text-align:center;">Error loading data. Check console.</p>';
-            }
+                if (typeof VanillaTilt !== 'undefined') VanillaTilt.init(document.querySelectorAll(".card"));
+            } catch(e) { console.error(e); }
         }
 
-        // --- TABS ---
         function switchTab(type, btn) {
             curType = type;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -260,7 +255,6 @@
             fetchData();
         }
 
-        // --- ACTIONS ---
         function openDetail(name, img, desc, dist, rate) {
             document.getElementById('detName').innerText = name;
             document.getElementById('detImg').src = img;
@@ -277,8 +271,7 @@
             const fd = new FormData(); fd.append('place_id', id);
             const r = await fetch('/get_reviews', {method:'POST', body:fd});
             const d = await r.json();
-            const l = document.getElementById('revList');
-            l.innerHTML = d.reviews.length ? d.reviews.map(x=>`<div style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;"><b>${x.user}</b>: ${x.text} <span style="float:right; color:#fbbf24">${x.rating}★</span></div>`).join('') : "No reviews yet.";
+            document.getElementById('revList').innerHTML = d.reviews.length ? d.reviews.map(x=>`<div style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;"><b>${x.user}</b>: ${x.text} <span style="float:right; color:#fbbf24">${x.rating}★</span></div>`).join('') : "No reviews yet.";
         }
 
         async function subRev() {
@@ -332,13 +325,43 @@
             if(d.status==='success') { document.getElementById('aLat').value = d.lat; document.getElementById('aLon').value = d.lon; } else alert("Not found");
         }
 
-        function openAuth() { if(token) { localStorage.clear(); location.reload(); } else document.getElementById('authModal').style.display='flex'; }
+        // --- AUTH & REGISTER LOGIC ---
+        function openAuth() { 
+            if(token) { localStorage.clear(); location.reload(); } 
+            else document.getElementById('authModal').style.display='flex'; 
+        }
         function openAdd() { document.getElementById('addModal').style.display='flex'; }
-        async function doLogin() {
-            const u = document.getElementById('uName').value; const p = document.getElementById('uPass').value;
-            const r = await fetch('/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
+
+        function toggleAuthMode() {
+            isRegister = !isRegister;
+            document.getElementById('authTitle').innerText = isRegister ? "Create Account" : "Welcome Back";
+            document.getElementById('authActionBtn').innerText = isRegister ? "REGISTER" : "SIGN IN";
+            document.getElementById('authToggleText').innerText = isRegister ? "Already have an account? Sign In" : "New here? Create an account";
+        }
+
+        async function doAuth() {
+            const u = document.getElementById('uName').value; 
+            const p = document.getElementById('uPass').value;
+            const endpoint = isRegister ? '/register' : '/login';
+
+            const r = await fetch(endpoint, {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({username:u, password:p})
+            });
             const d = await r.json();
-            if(d.status === 'success') { localStorage.setItem('tok', d.token); localStorage.setItem('role', d.role); localStorage.setItem('usr', u); location.reload(); } else alert("Invalid");
+            
+            if(d.status === 'success') { 
+                if(isRegister) {
+                    alert("Account Created! Please Login.");
+                    toggleAuthMode(); 
+                } else {
+                    localStorage.setItem('tok', d.token); 
+                    localStorage.setItem('role', d.role); 
+                    localStorage.setItem('usr', u); 
+                    location.reload(); 
+                }
+            } else { alert(d.message); }
         }
 
         init();
