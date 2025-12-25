@@ -3,34 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy AI v6.0</title>
+    <title>TourBuddy AI v7.0 (Final)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <style>
-        :root { --bg:#020617; --surface:#0f172a; --accent:#2dd4bf; --text:#f1f5f9; }
+        :root { --bg:#020617; --surface:#0f172a; --accent:#2dd4bf; --text:#f1f5f9; --border:#334155; }
         body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); margin:0; }
+        
+        /* Navbar */
         .navbar { position:fixed; top:20px; left:5%; width:90%; background:rgba(30,41,59,0.9); backdrop-filter:blur(10px); border-radius:50px; padding:10px 30px; display:flex; justify-content:space-between; align-items:center; z-index:1000; }
         .logo { font-size:1.5rem; font-weight:800; } .logo span { color:var(--accent); }
         .nav-btn { background:rgba(128,128,128,0.1); color:#94a3b8; padding:8px 15px; border-radius:30px; cursor:pointer; border:none; text-decoration:none; }
         .nav-btn:hover { background:var(--accent); color:white; }
+
+        /* Hero & Search */
         .hero { text-align:center; margin-top:140px; }
         .search-box { background:rgba(30,41,59,0.9); padding:8px; border-radius:50px; display:inline-flex; width:500px; margin-top:30px; border:1px solid #334155; }
         .search-box input { background:transparent; border:none; color:white; padding:10px 20px; flex:1; outline:none; font-size:1.1rem; }
-        .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:25px; padding:40px 5%; max-width:1200px; margin:0 auto; }
-        .card { background:var(--surface); border-radius:20px; overflow:hidden; border:1px solid #334155; position:relative; }
+        
+        /* Tabs (RESTORED) */
+        .container { max-width:1200px; margin:0 auto; padding:0 5%; }
+        .tabs { display:flex; justify-content:center; gap:10px; margin:30px 0; }
+        .tab { padding:8px 20px; border-radius:30px; background:rgba(128,128,128,0.1); border:1px solid #334155; color:#94a3b8; cursor:pointer; transition:0.3s; }
+        .tab.active, .tab:hover { background:var(--surface); border-color:var(--accent); color:var(--accent); }
+
+        /* Grid & Card */
+        .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:25px; padding-bottom:50px; }
+        .card { background:var(--surface); border-radius:20px; overflow:hidden; border:1px solid #334155; position:relative; display:flex; flex-direction:column; }
         .card-img { width:100%; height:200px; object-fit:cover; }
-        .card-body { padding:20px; }
+        .card-body { padding:20px; flex:1; display:flex; flex-direction:column; }
         .vibe-badge { position:absolute; top:15px; left:15px; background:var(--accent); color:#000; padding:5px 12px; border-radius:15px; font-size:0.8rem; font-weight:bold; }
         .time-badge { display:inline-block; background:#334155; color:#cbd5e1; padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-top:5px; }
-        
-        /* Modal & Form */
+
+        /* Card Buttons (RESTORED) */
+        .btn-group { display:flex; gap:5px; margin-top:auto; padding-top:15px; }
+        .btn-sm { flex:1; padding:8px; border-radius:8px; border:1px solid #334155; background:transparent; color:#cbd5e1; cursor:pointer; font-size:0.8rem; }
+        .btn-sm:hover { background:var(--accent); color:black; border-color:var(--accent); }
+        .btn-nav { background:#3b82f6; color:white; border:none; } 
+
+        /* Modals */
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; }
         .modal { background:var(--surface); width:90%; max-width:500px; padding:30px; border-radius:30px; border:1px solid #334155; position:relative; max-height:90vh; overflow-y:auto; }
         .input-field { width:100%; padding:12px; background:rgba(128,128,128,0.1); border:1px solid #334155; color:white; border-radius:10px; margin-top:10px; box-sizing:border-box; }
         .ai-btn { background:linear-gradient(45deg, #a78bfa, #2dd4bf); color:black; border:none; padding:5px 10px; border-radius:8px; font-size:0.8rem; cursor:pointer; font-weight:bold; margin-top:5px; float:right; }
         .action-btn { width:100%; padding:12px; margin-top:20px; border-radius:40px; background:var(--accent); color:white; border:none; font-weight:bold; cursor:pointer; }
+        .rev-list { text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px; background:rgba(128,128,128,0.05); padding:10px; border-radius:10px; }
     </style>
 </head>
 <body>
@@ -51,7 +68,16 @@
         </div>
     </div>
 
-    <div class="grid" id="grid"></div>
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('places', this)">Places</button>
+            <button class="tab" onclick="switchTab('shopping', this)">Shop</button>
+            <button class="tab" onclick="switchTab('food', this)">Food</button>
+            <button class="tab" onclick="switchTab('hotels', this)">Stays</button>
+        </div>
+        
+        <div class="grid" id="grid"></div>
+    </div>
 
     <div onclick="openAdd()" style="position:fixed; bottom:30px; right:30px; width:60px; height:60px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:black; cursor:pointer; z-index:1500; font-weight:bold;">+</div>
 
@@ -59,13 +85,19 @@
         <div class="modal">
             <span onclick="document.getElementById('addModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
             <h2>Add Spot 🌍</h2>
-            
             <input id="aName" placeholder="Name (e.g. Taj Mahal)" class="input-field">
             
             <div style="display:flex; gap:10px;">
-                <input id="aVibe" placeholder="Vibe (e.g. Spiritual, Chill)" class="input-field">
+                <input id="aVibe" placeholder="Vibe (e.g. Chill)" class="input-field">
                 <input id="aTime" placeholder="Avg Time (e.g. 2 hrs)" class="input-field">
             </div>
+
+            <select id="aType" class="input-field" style="background:rgba(128,128,128,0.1); color:#fff;">
+                <option value="places">Place</option>
+                <option value="food">Food</option>
+                <option value="shopping">Shop</option>
+                <option value="hotels">Hotel</option>
+            </select>
 
             <div style="margin-top:10px;">
                 <label style="color:#94a3b8; font-size:0.9rem;">Description</label>
@@ -85,6 +117,31 @@
         </div>
     </div>
 
+    <div id="detailModal" class="modal-overlay">
+        <div class="modal">
+            <span onclick="document.getElementById('detailModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
+            <h2 id="detName" style="color:var(--accent)"></h2>
+            <img id="detImg" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin:10px 0;">
+            <p id="detDesc" style="color:#94a3b8; line-height:1.6;"></p>
+            <div style="display:flex; justify-content:space-around; margin-top:20px; font-weight:bold;">
+                <div id="detDist"></div>
+                <div id="detRate"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reviewModal" class="modal-overlay">
+        <div class="modal">
+            <span onclick="document.getElementById('reviewModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
+            <h2 id="revTitle">Reviews</h2>
+            <div id="revList" class="rev-list"></div>
+            <input type="hidden" id="revId">
+            <input type="number" id="revRate" placeholder="Rating (1-5)" class="input-field" min="1" max="5">
+            <textarea id="revText" placeholder="Share your experience..." class="input-field" rows="3"></textarea>
+            <button onclick="subRev()" class="action-btn">POST REVIEW</button>
+        </div>
+    </div>
+
     <div id="authModal" class="modal-overlay">
         <div class="modal">
             <h2>Login</h2>
@@ -97,7 +154,9 @@
     <script>
         let token = localStorage.getItem("tok");
         let role = localStorage.getItem("role");
-        
+        let user = localStorage.getItem("usr");
+        let curType = "places"; // Tracks the active tab
+
         function init() {
             if(token) {
                 document.getElementById('authBtn').innerText = "Logout";
@@ -109,21 +168,42 @@
         async function fetchData() {
             const city = document.getElementById('cityInput').value;
             document.getElementById('heroCity').innerText = city.toUpperCase();
-            const fd = new FormData(); fd.append('city', city);
+            
+            const fd = new FormData(); 
+            fd.append('city', city);
+            fd.append('type', curType); // Send active tab type
+            
             const r = await fetch('/discover_places', {method:'POST', body:fd});
             const d = await r.json();
             
             const g = document.getElementById('grid'); g.innerHTML = '';
+            
+            if(d.items.length === 0) {
+                g.innerHTML = `<p style="text-align:center; width:100%; color:#666;">No ${curType} found in this city yet.</p>`;
+                return;
+            }
+
             d.items.forEach(i => {
+                const safeName = i.name.replace(/'/g, "'");
+                const safeDesc = (i.desc || "").replace(/'/g, "'").replace(/"/g, """);
+                const safeImg = i.img || "";
+
                 g.innerHTML += `
                     <div class="card">
                         <div class="vibe-badge">${i.vibe || 'General'}</div>
-                        <img src="${i.img}" class="card-img">
+                        <img src="${safeImg}" class="card-img">
                         <div class="card-body">
-                            <h3>${i.name}</h3>
+                            <h3>${safeName}</h3>
                             <div class="time-badge">⏳ ${i.duration || '1-2 hrs'}</div>
                             <div class="time-badge">💰 ${i.budget}</div>
-                            <p style="color:#94a3b8; font-size:0.9rem; margin-top:10px;">${i.desc}</p>
+                            <div class="time-badge">📍 ${i.distance}</div>
+                            <p style="color:#94a3b8; font-size:0.9rem; margin-top:10px; flex:1;">${safeDesc.substring(0, 80)}...</p>
+                            
+                            <div class="btn-group">
+                                <button class="btn-sm" onclick="openDetail('${safeName}', '${safeImg}', '${safeDesc}', '${i.distance}', '${i.rating}')">Info</button>
+                                <button class="btn-sm" onclick="openRev('${i.id}', '${safeName}')">Review</button>
+                                <button class="btn-sm btn-nav" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}')">Nav ↗</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -131,69 +211,95 @@
             VanillaTilt.init(document.querySelectorAll(".card"));
         }
 
-        // AI GENERATOR FUNCTION 🤖
+        // --- TAB SWITCHING ---
+        function switchTab(type, btn) {
+            curType = type;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            fetchData();
+        }
+
+        // --- DETAILS ---
+        function openDetail(name, img, desc, dist, rate) {
+            document.getElementById('detName').innerText = name;
+            document.getElementById('detImg').src = img;
+            document.getElementById('detDesc').innerText = desc;
+            document.getElementById('detDist').innerText = "📍 " + dist;
+            document.getElementById('detRate').innerText = "⭐ " + rate;
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        // --- REVIEWS ---
+        async function openRev(id, name) {
+            document.getElementById('revId').value = id;
+            document.getElementById('revTitle').innerText = name;
+            document.getElementById('reviewModal').style.display = 'flex';
+            const fd = new FormData(); fd.append('place_id', id);
+            const r = await fetch('/get_reviews', {method:'POST', body:fd});
+            const d = await r.json();
+            const l = document.getElementById('revList');
+            l.innerHTML = d.reviews.length ? d.reviews.map(x=>`<div style="margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;"><b>${x.user}</b>: ${x.text} <span style="float:right; color:#fbbf24">${x.rating}★</span></div>`).join('') : "No reviews yet.";
+        }
+
+        async function subRev() {
+            const fd = new FormData();
+            fd.append('place_id', document.getElementById('revId').value);
+            fd.append('user_name', user || "Guest");
+            fd.append('rating', document.getElementById('revRate').value);
+            fd.append('review_text', document.getElementById('revText').value);
+            await fetch('/submit_review', {method:'POST', body:fd});
+            alert("Review Posted!");
+            document.getElementById('reviewModal').style.display='none';
+        }
+
+        // --- AI & ADD ---
         async function generateAI() {
             const name = document.getElementById('aName').value;
             const vibe = document.getElementById('aVibe').value || "Awesome";
             const city = document.getElementById('cityInput').value;
-            
             if(!name) return alert("Enter Name first!");
-            const btn = document.querySelector('.ai-btn');
-            btn.innerText = "🤖 Thinking...";
-            
+            const btn = document.querySelector('.ai-btn'); btn.innerText = "🤖 Thinking...";
             const fd = new FormData(); fd.append('name', name); fd.append('city', city); fd.append('vibe', vibe);
             try {
                 const r = await fetch('/generate_ai_desc', {method:'POST', body:fd});
                 const d = await r.json();
-                if(d.status === 'success') {
-                    document.getElementById('aDesc').value = d.desc;
-                    btn.innerText = "✨ Done!";
-                } else { alert(d.desc); btn.innerText = "✨ Write with AI"; }
+                if(d.status === 'success') { document.getElementById('aDesc').value = d.desc; btn.innerText = "✨ Done!"; } 
+                else { alert(d.desc); btn.innerText = "✨ Write with AI"; }
             } catch(e) { alert("AI Error"); }
         }
 
         async function subPlace() {
             const fd = new FormData();
-            fd.append('city', document.getElementById('cityInput').value);
-            fd.append('category_type', 'places');
-            fd.append('name', document.getElementById('aName').value);
-            fd.append('vibe', document.getElementById('aVibe').value); // New
-            fd.append('duration', document.getElementById('aTime').value); // New
+            fd.append('city', document.getElementById('cityInput').value); 
+            fd.append('category_type', document.getElementById('aType').value); // Use Dropdown Value
+            fd.append('name', document.getElementById('aName').value); 
+            fd.append('vibe', document.getElementById('aVibe').value);
+            fd.append('duration', document.getElementById('aTime').value); 
             fd.append('desc', document.getElementById('aDesc').value);
-            fd.append('budget', document.getElementById('aBudget').value);
+            fd.append('budget', document.getElementById('aBudget').value); 
             fd.append('lat', document.getElementById('aLat').value || 0);
             fd.append('lon', document.getElementById('aLon').value || 0);
-            const f = document.getElementById('aFile').files[0];
-            if(f) fd.append('file', f);
-
+            const f = document.getElementById('aFile').files[0]; if(f) fd.append('file', f);
+            
             const r = await fetch('/add_place', {method:'POST', body:fd});
             const d = await r.json();
-            if(d.status === 'success') {
-                alert("Added!"); document.getElementById('addModal').style.display='none'; fetchData();
-            } else alert("Error");
+            if(d.status === 'success') { alert("Added!"); document.getElementById('addModal').style.display='none'; fetchData(); } else alert("Error");
         }
 
         async function findCoords() {
-            const name = document.getElementById('aName').value;
-            const city = document.getElementById('cityInput').value;
+            const name = document.getElementById('aName').value; const city = document.getElementById('cityInput').value;
             const r = await fetch('/geocode', {method:'POST', body:new URLSearchParams({address: name + ", " + city})});
             const d = await r.json();
-            if(d.status==='success') {
-                document.getElementById('aLat').value = d.lat; document.getElementById('aLon').value = d.lon;
-            } else alert("Not found");
+            if(d.status==='success') { document.getElementById('aLat').value = d.lat; document.getElementById('aLon').value = d.lon; } else alert("Not found");
         }
 
         function openAuth() { if(token) { localStorage.clear(); location.reload(); } else document.getElementById('authModal').style.display='flex'; }
         function openAdd() { document.getElementById('addModal').style.display='flex'; }
         async function doLogin() {
-            const u = document.getElementById('uName').value;
-            const p = document.getElementById('uPass').value;
+            const u = document.getElementById('uName').value; const p = document.getElementById('uPass').value;
             const r = await fetch('/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p})});
             const d = await r.json();
-            if(d.status === 'success') {
-                localStorage.setItem('tok', d.token); localStorage.setItem('role', d.role);
-                location.reload();
-            } else alert("Invalid");
+            if(d.status === 'success') { localStorage.setItem('tok', d.token); localStorage.setItem('role', d.role); localStorage.setItem('usr', u); location.reload(); } else alert("Invalid");
         }
 
         init();
