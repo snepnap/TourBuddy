@@ -3,58 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy AI v7.0 (Final)</title>
+    <title>TourBuddy AI v7.4 (Final Fix)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <style>
+        /* Dark Theme (Default) */
         :root { --bg:#020617; --surface:#0f172a; --accent:#2dd4bf; --text:#f1f5f9; --border:#334155; }
-        body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); margin:0; }
+        
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg: #f8fafc; 
+            --surface: #ffffff; 
+            --accent: #0d9488; 
+            --text: #0f172a; 
+            --border: #cbd5e1;
+        }
+
+        body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); margin:0; transition: background 0.3s, color 0.3s; }
         
         /* Navbar */
-        .navbar { position:fixed; top:20px; left:5%; width:90%; background:rgba(30,41,59,0.9); backdrop-filter:blur(10px); border-radius:50px; padding:10px 30px; display:flex; justify-content:space-between; align-items:center; z-index:1000; }
+        .navbar { position:fixed; top:20px; left:5%; width:90%; background:var(--surface); box-shadow:0 4px 20px rgba(0,0,0,0.1); border:1px solid var(--border); border-radius:50px; padding:10px 30px; display:flex; justify-content:space-between; align-items:center; z-index:1000; }
         .logo { font-size:1.5rem; font-weight:800; } .logo span { color:var(--accent); }
-        .nav-btn { background:rgba(128,128,128,0.1); color:#94a3b8; padding:8px 15px; border-radius:30px; cursor:pointer; border:none; text-decoration:none; }
-        .nav-btn:hover { background:var(--accent); color:white; }
+        .nav-btn { background:transparent; color:var(--text); padding:8px 15px; border-radius:30px; cursor:pointer; border:1px solid var(--border); text-decoration:none; display:flex; align-items:center; justify-content:center; }
+        .nav-btn:hover { background:var(--accent); color:white; border-color:var(--accent); }
 
-        /* Hero & Search */
+        /* Hero */
         .hero { text-align:center; margin-top:140px; }
-        .search-box { background:rgba(30,41,59,0.9); padding:8px; border-radius:50px; display:inline-flex; width:500px; margin-top:30px; border:1px solid #334155; }
-        .search-box input { background:transparent; border:none; color:white; padding:10px 20px; flex:1; outline:none; font-size:1.1rem; }
+        .search-box { background:var(--surface); padding:8px; border-radius:50px; display:inline-flex; width:500px; margin-top:30px; border:1px solid var(--border); box-shadow:0 4px 15px rgba(0,0,0,0.05); }
+        .search-box input { background:transparent; border:none; color:var(--text); padding:10px 20px; flex:1; outline:none; font-size:1.1rem; }
         
-        /* Tabs (RESTORED) */
+        /* Tabs */
         .container { max-width:1200px; margin:0 auto; padding:0 5%; }
         .tabs { display:flex; justify-content:center; gap:10px; margin:30px 0; }
-        .tab { padding:8px 20px; border-radius:30px; background:rgba(128,128,128,0.1); border:1px solid #334155; color:#94a3b8; cursor:pointer; transition:0.3s; }
-        .tab.active, .tab:hover { background:var(--surface); border-color:var(--accent); color:var(--accent); }
+        .tab { padding:8px 20px; border-radius:30px; background:var(--surface); border:1px solid var(--border); color:var(--text); opacity:0.7; cursor:pointer; transition:0.3s; }
+        .tab.active, .tab:hover { opacity:1; border-color:var(--accent); color:var(--accent); font-weight:bold; }
 
-        /* Grid & Card */
+        /* Grid */
         .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:25px; padding-bottom:50px; }
-        .card { background:var(--surface); border-radius:20px; overflow:hidden; border:1px solid #334155; position:relative; display:flex; flex-direction:column; }
-        .card-img { width:100%; height:200px; object-fit:cover; }
+        .card { background:var(--surface); border-radius:20px; overflow:hidden; border:1px solid var(--border); position:relative; display:flex; flex-direction:column; box-shadow:0 4px 10px rgba(0,0,0,0.05); }
+        .card-img { width:100%; height:200px; object-fit:cover; background:#222; }
         .card-body { padding:20px; flex:1; display:flex; flex-direction:column; }
-        .vibe-badge { position:absolute; top:15px; left:15px; background:var(--accent); color:#000; padding:5px 12px; border-radius:15px; font-size:0.8rem; font-weight:bold; }
-        .time-badge { display:inline-block; background:#334155; color:#cbd5e1; padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-top:5px; }
+        .vibe-badge { position:absolute; top:15px; left:15px; background:var(--accent); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.3); padding:5px 12px; border-radius:15px; font-size:0.8rem; font-weight:bold; }
+        
+        /* Badges */
+        .time-badge { display:inline-block; background:rgba(128,128,128,0.1); border:1px solid var(--border); color:var(--text); padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-top:5px; }
 
-        /* Card Buttons (RESTORED) */
+        /* Buttons */
         .btn-group { display:flex; gap:5px; margin-top:auto; padding-top:15px; }
-        .btn-sm { flex:1; padding:8px; border-radius:8px; border:1px solid #334155; background:transparent; color:#cbd5e1; cursor:pointer; font-size:0.8rem; }
-        .btn-sm:hover { background:var(--accent); color:black; border-color:var(--accent); }
+        .btn-sm { flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); cursor:pointer; font-size:0.8rem; transition:0.2s; }
+        .btn-sm:hover { background:var(--accent); color:white; border-color:var(--accent); }
         .btn-nav { background:#3b82f6; color:white; border:none; } 
 
         /* Modals */
-        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; }
-        .modal { background:var(--surface); width:90%; max-width:500px; padding:30px; border-radius:30px; border:1px solid #334155; position:relative; max-height:90vh; overflow-y:auto; }
-        .input-field { width:100%; padding:12px; background:rgba(128,128,128,0.1); border:1px solid #334155; color:white; border-radius:10px; margin-top:10px; box-sizing:border-box; }
-        .ai-btn { background:linear-gradient(45deg, #a78bfa, #2dd4bf); color:black; border:none; padding:5px 10px; border-radius:8px; font-size:0.8rem; cursor:pointer; font-weight:bold; margin-top:5px; float:right; }
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; backdrop-filter:blur(5px); }
+        .modal { background:var(--surface); width:90%; max-width:500px; padding:30px; border-radius:30px; border:1px solid var(--border); position:relative; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .input-field { width:100%; padding:12px; background:transparent; border:1px solid var(--border); color:var(--text); border-radius:10px; margin-top:10px; box-sizing:border-box; }
+        .ai-btn { background:linear-gradient(45deg, #a78bfa, #2dd4bf); color:white; border:none; padding:5px 10px; border-radius:8px; font-size:0.8rem; cursor:pointer; font-weight:bold; margin-top:5px; float:right; }
         .action-btn { width:100%; padding:12px; margin-top:20px; border-radius:40px; background:var(--accent); color:white; border:none; font-weight:bold; cursor:pointer; }
-        .rev-list { text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px; background:rgba(128,128,128,0.05); padding:10px; border-radius:10px; }
     </style>
 </head>
 <body>
 
     <div class="navbar">
         <div class="logo">TOUR<span>BUDDY</span></div>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="nav-btn" onclick="toggleTheme()" id="themeBtn" style="font-size:1.2rem; border:none;">☀</button>
             <a href="/admin" id="adminBtn" class="nav-btn" style="display:none; color:#f87171;">🛡️ Admin</a>
             <div id="authBtn" class="nav-btn" onclick="openAuth()">Login</div>
         </div>
@@ -64,7 +77,7 @@
         <h1 id="heroCity">BILASPUR</h1>
         <div class="search-box">
             <input type="text" id="cityInput" value="Bilaspur">
-            <button class="nav-btn" style="background:var(--accent); color:black;" onclick="fetchData()">GO</button>
+            <button class="nav-btn" style="background:var(--accent); color:white; border:none;" onclick="fetchData()">GO</button>
         </div>
     </div>
 
@@ -79,7 +92,7 @@
         <div class="grid" id="grid"></div>
     </div>
 
-    <div onclick="openAdd()" style="position:fixed; bottom:30px; right:30px; width:60px; height:60px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:black; cursor:pointer; z-index:1500; font-weight:bold;">+</div>
+    <div onclick="openAdd()" style="position:fixed; bottom:30px; right:30px; width:60px; height:60px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:white; cursor:pointer; z-index:1500; font-weight:bold; box-shadow:0 5px 20px rgba(0,0,0,0.3);">+</div>
 
     <div id="addModal" class="modal-overlay">
         <div class="modal">
@@ -92,7 +105,7 @@
                 <input id="aTime" placeholder="Avg Time (e.g. 2 hrs)" class="input-field">
             </div>
 
-            <select id="aType" class="input-field" style="background:rgba(128,128,128,0.1); color:#fff;">
+            <select id="aType" class="input-field" style="background:var(--surface); color:var(--text);">
                 <option value="places">Place</option>
                 <option value="food">Food</option>
                 <option value="shopping">Shop</option>
@@ -107,7 +120,7 @@
 
             <input id="aBudget" placeholder="Budget (e.g. $10)" class="input-field">
             <div style="display:flex; gap:5px;">
-                <button onclick="findCoords()" class="input-field" style="background:#334155; cursor:pointer;">📍 Find GPS</button>
+                <button onclick="findCoords()" class="input-field" style="background:var(--border); cursor:pointer;">📍 Find GPS</button>
                 <input id="aLat" placeholder="Lat" class="input-field" style="width:30%">
                 <input id="aLon" placeholder="Lon" class="input-field" style="width:30%">
             </div>
@@ -122,7 +135,7 @@
             <span onclick="document.getElementById('detailModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
             <h2 id="detName" style="color:var(--accent)"></h2>
             <img id="detImg" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin:10px 0;">
-            <p id="detDesc" style="color:#94a3b8; line-height:1.6;"></p>
+            <p id="detDesc" style="color:var(--text); opacity:0.8; line-height:1.6;"></p>
             <div style="display:flex; justify-content:space-around; margin-top:20px; font-weight:bold;">
                 <div id="detDist"></div>
                 <div id="detRate"></div>
@@ -134,7 +147,7 @@
         <div class="modal">
             <span onclick="document.getElementById('reviewModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
             <h2 id="revTitle">Reviews</h2>
-            <div id="revList" class="rev-list"></div>
+            <div id="revList" style="text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px; background:rgba(0,0,0,0.1); padding:10px; border-radius:10px;"></div>
             <input type="hidden" id="revId">
             <input type="number" id="revRate" placeholder="Rating (1-5)" class="input-field" min="1" max="5">
             <textarea id="revText" placeholder="Share your experience..." class="input-field" rows="3"></textarea>
@@ -155,7 +168,8 @@
         let token = localStorage.getItem("tok");
         let role = localStorage.getItem("role");
         let user = localStorage.getItem("usr");
-        let curType = "places"; // Tracks the active tab
+        let curType = "places"; 
+        let isDark = true;
 
         function init() {
             if(token) {
@@ -165,7 +179,14 @@
             fetchData();
         }
 
-       async function fetchData() {
+        // --- THEME TOGGLE LOGIC ---
+        function toggleTheme() {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeBtn').innerText = isDark ? '☀' : '☾';
+        }
+
+        async function fetchData() {
             const city = document.getElementById('cityInput').value;
             document.getElementById('heroCity').innerText = city.toUpperCase();
             
@@ -180,57 +201,66 @@
                 const g = document.getElementById('grid'); g.innerHTML = '';
                 
                 if(!d.items || d.items.length === 0) {
-                    g.innerHTML = `<p style="text-align:center; width:100%; color:#666;">No ${curType} found in this city yet.</p>`;
+                    g.innerHTML = `<p style="text-align:center; width:100%; color:var(--text); opacity:0.6; font-size:1.2rem; margin-top:20px;">
+                        No ${curType} found in ${city} yet. <br> 
+                        <span style="font-size:0.9rem; color:var(--accent); cursor:pointer;" onclick="openAdd()">+ Be the first to add one!</span>
+                    </p>`;
                     return;
                 }
 
                 d.items.forEach(i => {
-                    // --- SAFETY CHECKS (Prevents Errors) ---
-                    if (!i) return; // Skip if item is null
-                    
-                    // Safe string handling to prevent quote errors
-                    const safeName = (i.name || "Unknown Place").replace(/'/g, "\\'");
-                    const safeDesc = (i.desc || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    if (!i) return; 
+
+                    // Robust Data Cleaning
+                    const safeName = (i.name || "Unknown").replace(/'/g, "\\'");
+                    const safeDesc = (i.desc || "").replace(/'/g, "\\'").replace(/"/g, ""); 
                     const safeImg = i.img || "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy";
+                    const safeVibe = i.vibe || "General";
+                    const safeDuration = i.duration || "1-2 hrs";
+                    const safeBudget = i.budget || "N/A";
                     const safeDist = i.distance || "N/A";
                     const safeRate = i.rating || "New";
-                    const safeBudget = i.budget || "N/A";
-                    const safeDuration = i.duration || "1-2 hrs";
-                    const safeVibe = i.vibe || "General";
 
                     g.innerHTML += `
                         <div class="card">
                             <div class="vibe-badge">${safeVibe}</div>
-                            <img src="${safeImg}" class="card-img" onerror="this.src='https://placehold.co/600x400?text=Error'">
+                            <img src="${safeImg}" class="card-img" onerror="this.src='https://placehold.co/600x400?text=Image+Error'">
                             <div class="card-body">
                                 <h3>${safeName}</h3>
                                 <div class="time-badge">⏳ ${safeDuration}</div>
                                 <div class="time-badge">💰 ${safeBudget}</div>
                                 <div class="time-badge">📍 ${safeDist}</div>
-                                <p style="color:#94a3b8; font-size:0.9rem; margin-top:10px; flex:1;">${safeDesc.substring(0, 80)}...</p>
+                                <p style="color:var(--text); opacity:0.7; font-size:0.9rem; margin-top:10px; flex:1;">${safeDesc.substring(0, 80)}...</p>
                                 
                                 <div class="btn-group">
                                     <button class="btn-sm" onclick="openDetail('${safeName}', '${safeImg}', '${safeDesc}', '${safeDist}', '${safeRate}')">Info</button>
                                     <button class="btn-sm" onclick="openRev('${i.id}', '${safeName}')">Review</button>
-                                    <button class="btn-sm btn-nav" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}')">Nav ↗</button>
+                                    <button class="btn-sm btn-nav" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${i.lat},${i.lon}')">Nav ↗</button>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
                 
-                // Re-initialize tilt effect for new cards
                 if (typeof VanillaTilt !== 'undefined') {
                     VanillaTilt.init(document.querySelectorAll(".card"));
                 }
 
             } catch(e) {
                 console.error("Fetch Error:", e);
-                document.getElementById('grid').innerHTML = '<p style="color:red; text-align:center;">Error loading data.</p>';
+                document.getElementById('grid').innerHTML = '<p style="color:#ef4444; text-align:center;">Error loading data. Check console.</p>';
             }
         }
 
-        // --- DETAILS ---
+        // --- TABS ---
+        function switchTab(type, btn) {
+            curType = type;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            fetchData();
+        }
+
+        // --- ACTIONS ---
         function openDetail(name, img, desc, dist, rate) {
             document.getElementById('detName').innerText = name;
             document.getElementById('detImg').src = img;
@@ -240,7 +270,6 @@
             document.getElementById('detailModal').style.display = 'flex';
         }
 
-        // --- REVIEWS ---
         async function openRev(id, name) {
             document.getElementById('revId').value = id;
             document.getElementById('revTitle').innerText = name;
@@ -249,7 +278,7 @@
             const r = await fetch('/get_reviews', {method:'POST', body:fd});
             const d = await r.json();
             const l = document.getElementById('revList');
-            l.innerHTML = d.reviews.length ? d.reviews.map(x=>`<div style="margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;"><b>${x.user}</b>: ${x.text} <span style="float:right; color:#fbbf24">${x.rating}★</span></div>`).join('') : "No reviews yet.";
+            l.innerHTML = d.reviews.length ? d.reviews.map(x=>`<div style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;"><b>${x.user}</b>: ${x.text} <span style="float:right; color:#fbbf24">${x.rating}★</span></div>`).join('') : "No reviews yet.";
         }
 
         async function subRev() {
@@ -263,7 +292,6 @@
             document.getElementById('reviewModal').style.display='none';
         }
 
-        // --- AI & ADD ---
         async function generateAI() {
             const name = document.getElementById('aName').value;
             const vibe = document.getElementById('aVibe').value || "Awesome";
@@ -282,7 +310,7 @@
         async function subPlace() {
             const fd = new FormData();
             fd.append('city', document.getElementById('cityInput').value); 
-            fd.append('category_type', document.getElementById('aType').value); // Use Dropdown Value
+            fd.append('category_type', document.getElementById('aType').value); 
             fd.append('name', document.getElementById('aName').value); 
             fd.append('vibe', document.getElementById('aVibe').value);
             fd.append('duration', document.getElementById('aTime').value); 
