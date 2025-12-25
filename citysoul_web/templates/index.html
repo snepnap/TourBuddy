@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourBuddy AI v7.5 (Final Fixed)</title>
+    <title>TourBuddy AI v7.5 (Fixed Navigation)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
     <style>
@@ -25,13 +25,13 @@
 
         /* Hero */
         .hero { text-align:center; margin-top:140px; }
-        .search-box { background:var(--surface); padding:8px; border-radius:50px; display:inline-flex; width:500px; margin-top:30px; border:1px solid var(--border); box-shadow:0 4px 15px rgba(0,0,0,0.05); }
-        .search-box input { background:transparent; border:none; color:var(--text); padding:10px 20px; flex:1; outline:none; font-size:1.1rem; }
+        .search-box { background:var(--surface); padding:8px; border-radius:50px; display:inline-flex; width:90%; max-width:500px; margin-top:30px; border:1px solid var(--border); box-shadow:0 4px 15px rgba(0,0,0,0.05); }
+        .search-box input { background:transparent; border:none; color:var(--text); padding:10px 20px; flex:1; outline:none; font-size:1.1rem; min-width: 0; }
         
         /* Tabs */
         .container { max-width:1200px; margin:0 auto; padding:0 5%; }
-        .tabs { display:flex; justify-content:center; gap:10px; margin:30px 0; }
-        .tab { padding:8px 20px; border-radius:30px; background:var(--surface); border:1px solid var(--border); color:var(--text); opacity:0.7; cursor:pointer; transition:0.3s; }
+        .tabs { display:flex; justify-content:center; gap:10px; margin:30px 0; overflow-x: auto; padding-bottom: 5px; }
+        .tab { padding:8px 20px; border-radius:30px; background:var(--surface); border:1px solid var(--border); color:var(--text); opacity:0.7; cursor:pointer; transition:0.3s; white-space: nowrap; }
         .tab.active, .tab:hover { opacity:1; border-color:var(--accent); color:var(--accent); font-weight:bold; }
 
         /* Grid */
@@ -39,16 +39,15 @@
         .card { background:var(--surface); border-radius:20px; overflow:hidden; border:1px solid var(--border); position:relative; display:flex; flex-direction:column; box-shadow:0 4px 10px rgba(0,0,0,0.05); }
         .card-img { width:100%; height:200px; object-fit:cover; background:#222; }
         .card-body { padding:20px; flex:1; display:flex; flex-direction:column; }
-        .vibe-badge { position:absolute; top:15px; left:15px; background:var(--accent); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.3); padding:5px 12px; border-radius:15px; font-size:0.8rem; font-weight:bold; }
+        .vibe-badge { position:absolute; top:15px; left:15px; background:var(--accent); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.3); padding:5px 12px; border-radius:15px; font-size:0.8rem; font-weight:bold; z-index: 10; }
         
-        /* Badges */
-        .time-badge { display:inline-block; background:rgba(128,128,128,0.1); border:1px solid var(--border); color:var(--text); padding:2px 8px; border-radius:4px; font-size:0.8rem; margin-top:5px; }
+        .time-badge { display:inline-block; background:rgba(128,128,128,0.1); border:1px solid var(--border); color:var(--text); padding:2px 8px; border-radius:4px; font-size:0.8rem; margin: 5px 2px 0 0; }
 
         /* Buttons */
         .btn-group { display:flex; gap:5px; margin-top:auto; padding-top:15px; }
-        .btn-sm { flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); cursor:pointer; font-size:0.8rem; transition:0.2s; }
+        .btn-sm { flex:1; padding:10px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text); cursor:pointer; font-size:0.8rem; transition:0.2s; }
         .btn-sm:hover { background:var(--accent); color:white; border-color:var(--accent); }
-        .btn-nav { background:#3b82f6; color:white; border:none; } 
+        .btn-nav { background:#3b82f6; color:white; border:none; font-weight: 600; } 
 
         /* Modals */
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; backdrop-filter:blur(5px); }
@@ -89,77 +88,10 @@
 
     <div onclick="openAdd()" style="position:fixed; bottom:30px; right:30px; width:60px; height:60px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:white; cursor:pointer; z-index:1500; font-weight:bold; box-shadow:0 5px 20px rgba(0,0,0,0.3);">+</div>
 
-    <div id="addModal" class="modal-overlay">
-        <div class="modal">
-            <span onclick="document.getElementById('addModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
-            <h2>Add Spot 🌍</h2>
-            <input id="aName" placeholder="Name (e.g. Taj Mahal)" class="input-field">
-            
-            <div style="display:flex; gap:10px;">
-                <input id="aVibe" placeholder="Vibe (e.g. Chill)" class="input-field">
-                <input id="aTime" placeholder="Avg Time (e.g. 2 hrs)" class="input-field">
-            </div>
-
-            <select id="aType" class="input-field" style="background:var(--surface); color:var(--text);">
-                <option value="places">Place</option>
-                <option value="food">Food</option>
-                <option value="shopping">Shop</option>
-                <option value="hotels">Hotel</option>
-            </select>
-
-            <div style="margin-top:10px;">
-                <label style="color:#94a3b8; font-size:0.9rem;">Description</label>
-                <button class="ai-btn" onclick="generateAI()">✨ Write with AI</button>
-                <textarea id="aDesc" rows="3" class="input-field" placeholder="Or type manually..."></textarea>
-            </div>
-
-            <input id="aBudget" placeholder="Budget (e.g. $10)" class="input-field">
-            <div style="display:flex; gap:5px;">
-                <button onclick="findCoords()" class="input-field" style="background:var(--border); cursor:pointer;">📍 Find GPS</button>
-                <input id="aLat" placeholder="Lat" class="input-field" style="width:30%">
-                <input id="aLon" placeholder="Lon" class="input-field" style="width:30%">
-            </div>
-
-            <input type="file" id="aFile" class="input-field">
-            <button onclick="subPlace()" class="action-btn">SUBMIT SPOT</button>
-        </div>
-    </div>
-
-    <div id="detailModal" class="modal-overlay">
-        <div class="modal">
-            <span onclick="document.getElementById('detailModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
-            <h2 id="detName" style="color:var(--accent)"></h2>
-            <img id="detImg" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin:10px 0;">
-            <p id="detDesc" style="color:var(--text); opacity:0.8; line-height:1.6;"></p>
-            <div style="display:flex; justify-content:space-around; margin-top:20px; font-weight:bold;">
-                <div id="detDist"></div>
-                <div id="detRate"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="reviewModal" class="modal-overlay">
-        <div class="modal">
-            <span onclick="document.getElementById('reviewModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
-            <h2 id="revTitle">Reviews</h2>
-            <div id="revList" style="text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px; background:rgba(0,0,0,0.1); padding:10px; border-radius:10px;"></div>
-            <input type="hidden" id="revId">
-            <input type="number" id="revRate" placeholder="Rating (1-5)" class="input-field" min="1" max="5">
-            <textarea id="revText" placeholder="Share your experience..." class="input-field" rows="3"></textarea>
-            <button onclick="subRev()" class="action-btn">POST REVIEW</button>
-        </div>
-    </div>
-
-    <div id="authModal" class="modal-overlay">
-        <div class="modal">
-            <span onclick="document.getElementById('authModal').style.display='none'" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span>
-            <h2 id="authTitle">Welcome Back</h2>
-            <input id="uName" placeholder="Username" class="input-field">
-            <input id="uPass" type="password" placeholder="Password" class="input-field">
-            <button onclick="doAuth()" id="authActionBtn" class="action-btn">SIGN IN</button>
-            <p id="authToggleText" style="margin-top:15px; cursor:pointer; font-size:0.9rem; color:var(--accent);" onclick="toggleAuthMode()">New here? Create an account</p>
-        </div>
-    </div>
+    <div id="addModal" class="modal-overlay"><div class="modal"><span onclick="closeModal('addModal')" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span><h2>Add Spot 🌍</h2><input id="aName" placeholder="Name (e.g. Taj Mahal)" class="input-field"><div style="display:flex; gap:10px;"><input id="aVibe" placeholder="Vibe (e.g. Chill)" class="input-field"><input id="aTime" placeholder="Avg Time (e.g. 2 hrs)" class="input-field"></div><select id="aType" class="input-field" style="background:var(--surface); color:var(--text);"><option value="places">Place</option><option value="food">Food</option><option value="shopping">Shop</option><option value="hotels">Hotel</option></select><div style="margin-top:10px;"><label style="color:#94a3b8; font-size:0.9rem;">Description</label><button class="ai-btn" onclick="generateAI()">✨ Write with AI</button><textarea id="aDesc" rows="3" class="input-field" placeholder="Or type manually..."></textarea></div><input id="aBudget" placeholder="Budget (e.g. $10)" class="input-field"><div style="display:flex; gap:5px;"><button onclick="findCoords()" class="input-field" style="background:var(--border); cursor:pointer;">📍 Find GPS</button><input id="aLat" placeholder="Lat" class="input-field" style="width:30%"><input id="aLon" placeholder="Lon" class="input-field" style="width:30%"></div><input type="file" id="aFile" class="input-field"><button onclick="subPlace()" class="action-btn">SUBMIT SPOT</button></div></div>
+    <div id="detailModal" class="modal-overlay"><div class="modal"><span onclick="closeModal('detailModal')" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span><h2 id="detName" style="color:var(--accent)"></h2><img id="detImg" style="width:100%; height:200px; object-fit:cover; border-radius:15px; margin:10px 0;"><p id="detDesc" style="color:var(--text); opacity:0.8; line-height:1.6;"></p><div style="display:flex; justify-content:space-around; margin-top:20px; font-weight:bold;"><div id="detDist"></div><div id="detRate"></div></div></div></div>
+    <div id="reviewModal" class="modal-overlay"><div class="modal"><span onclick="closeModal('reviewModal')" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span><h2 id="revTitle">Reviews</h2><div id="revList" style="text-align:left; max-height:200px; overflow-y:auto; margin-bottom:20px; background:rgba(0,0,0,0.1); padding:10px; border-radius:10px;"></div><input type="hidden" id="revId"><input type="number" id="revRate" placeholder="Rating (1-5)" class="input-field" min="1" max="5"><textarea id="revText" placeholder="Share your experience..." class="input-field" rows="3"></textarea><button onclick="subRev()" class="action-btn">POST REVIEW</button></div></div>
+    <div id="authModal" class="modal-overlay"><div class="modal"><span onclick="closeModal('authModal')" style="position:absolute; top:20px; right:20px; cursor:pointer;">✕</span><h2 id="authTitle">Welcome Back</h2><input id="uName" placeholder="Username" class="input-field"><input id="uPass" type="password" placeholder="Password" class="input-field"><button onclick="doAuth()" id="authActionBtn" class="action-btn">SIGN IN</button><p id="authToggleText" style="margin-top:15px; cursor:pointer; font-size:0.9rem; color:var(--accent);" onclick="toggleAuthMode()">New here? Create an account</p></div></div>
 
     <script>
         let token = localStorage.getItem("tok");
@@ -175,7 +107,6 @@
                 document.getElementById('authBtn').innerText = "Logout";
                 if(role === 'admin') document.getElementById('adminBtn').style.display = "block";
             }
-            // Get Geo & Fetch
             if(navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
                     lat = p.coords.latitude; lon = p.coords.longitude; fetchData(); 
@@ -188,6 +119,8 @@
             document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
             document.getElementById('themeBtn').innerText = isDark ? '☀' : '☾';
         }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         async function fetchData() {
             const city = document.getElementById('cityInput').value;
@@ -202,50 +135,53 @@
             try {
                 const r = await fetch('/discover_places', {method:'POST', body:fd});
                 const d = await r.json();
-                
                 const g = document.getElementById('grid'); g.innerHTML = '';
                 
                 if(!d.items || d.items.length === 0) {
-                    g.innerHTML = `<p style="text-align:center; width:100%; color:var(--text); opacity:0.6; font-size:1.2rem; margin-top:20px;">
-                        No ${curType} found in ${city} yet. <br> 
-                        <span style="font-size:0.9rem; color:var(--accent); cursor:pointer;" onclick="openAdd()">+ Be the first to add one!</span>
-                    </p>`;
+                    g.innerHTML = `<p style="text-align:center; width:100%; color:var(--text); opacity:0.6; padding:20px;">No ${curType} found in ${city}. Be the first to add one!</p>`;
                     return;
                 }
 
                 d.items.forEach(i => {
-                    if (!i) return; 
-                    const safeName = (i.name || "Unknown").replace(/'/g, "\\'");
+                    const safeName = (i.name || "Spot").replace(/'/g, "\\'");
                     const safeDesc = (i.desc || "").replace(/'/g, "\\'").replace(/"/g, ""); 
                     const safeImg = i.img || "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy";
-                    const safeVibe = i.vibe || "General";
-                    const safeDuration = i.duration || "1-2 hrs";
-                    const safeBudget = i.budget || "N/A";
-                    const safeDist = i.distance || "N/A";
-                    const safeRate = i.rating || "New";
 
                     g.innerHTML += `
-                        <div class="card">
-                            <div class="vibe-badge">${safeVibe}</div>
-                            <img src="${safeImg}" class="card-img" onerror="this.src='https://placehold.co/600x400?text=Image+Error'">
+                        <div class="card" data-tilt>
+                            <div class="vibe-badge">${i.vibe || 'Explore'}</div>
+                            <img src="${safeImg}" class="card-img" onerror="this.src='https://placehold.co/600x400?text=No+Image'">
                             <div class="card-body">
-                                <h3>${safeName}</h3>
-                                <div class="time-badge">⏳ ${safeDuration}</div>
-                                <div class="time-badge">💰 ${safeBudget}</div>
-                                <div class="time-badge">📍 ${safeDist}</div>
-                                <p style="color:var(--text); opacity:0.7; font-size:0.9rem; margin-top:10px; flex:1;">${safeDesc.substring(0, 80)}...</p>
+                                <h3>${i.name}</h3>
+                                <div>
+                                    <span class="time-badge">⏳ ${i.duration || '1h'}</span>
+                                    <span class="time-badge">💰 ${i.budget || 'Free'}</span>
+                                    <span class="time-badge">📍 ${i.distance || '0km'}</span>
+                                </div>
+                                <p style="color:var(--text); opacity:0.7; font-size:0.9rem; margin-top:10px; flex:1;">${i.desc ? i.desc.substring(0, 75) + '...' : 'No description available.'}</p>
                                 
                                 <div class="btn-group">
-                                    <button class="btn-sm" onclick="openDetail('${safeName}', '${safeImg}', '${safeDesc}', '${safeDist}', '${safeRate}')">Info</button>
+                                    <button class="btn-sm" onclick="openDetail('${safeName}', '${safeImg}', '${safeDesc}', '${i.distance}', '${i.rating}')">Info</button>
                                     <button class="btn-sm" onclick="openRev('${i.id}', '${safeName}')">Review</button>
-                                    <button class="btn-sm btn-nav" onclick="window.open('http://googleusercontent.com/maps.google.com/?q=${i.lat},${i.lon}')">Nav ↗</button>
+                                    <button class="btn-sm btn-nav" onclick="openNav(${i.lat}, ${i.lon})">Navigate</button>
                                 </div>
                             </div>
                         </div>
                     `;
                 });
-                if (typeof VanillaTilt !== 'undefined') VanillaTilt.init(document.querySelectorAll(".card"));
-            } catch(e) { console.error(e); }
+                if (window.VanillaTilt) VanillaTilt.init(document.querySelectorAll(".card"));
+            } catch(e) { console.error("Fetch Error:", e); }
+        }
+
+        // --- NAVIGATION FIXED ---
+        function openNav(destLat, destLon) {
+            if(!destLat || !destLon || destLat == 0) {
+                alert("GPS Coordinates not available for this spot.");
+                return;
+            }
+            // Uses the official Google Maps URL Scheme (Works on Web & Mobile Apps)
+            const url = `https://www.google.com/maps/search/?api=1&query=${destLat},${destLon}`;
+            window.open(url, '_blank');
         }
 
         function switchTab(type, btn) {
@@ -260,7 +196,7 @@
             document.getElementById('detImg').src = img;
             document.getElementById('detDesc').innerText = desc;
             document.getElementById('detDist').innerText = "📍 " + dist;
-            document.getElementById('detRate').innerText = "⭐ " + rate;
+            document.getElementById('detRate').innerText = "⭐ " + (rate || "New");
             document.getElementById('detailModal').style.display = 'flex';
         }
 
@@ -269,9 +205,11 @@
             document.getElementById('revTitle').innerText = name;
             document.getElementById('reviewModal').style.display = 'flex';
             const fd = new FormData(); fd.append('place_id', id);
-            const r = await fetch('/get_reviews', {method:'POST', body:fd});
-            const d = await r.json();
-            document.getElementById('revList').innerHTML = d.reviews.length ? d.reviews.map(x=>`<div style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;"><b>${x.user}</b>: ${x.text} <span style="float:right; color:#fbbf24">${x.rating}★</span></div>`).join('') : "No reviews yet.";
+            try {
+                const r = await fetch('/get_reviews', {method:'POST', body:fd});
+                const d = await r.json();
+                document.getElementById('revList').innerHTML = d.reviews.length ? d.reviews.map(x=>`<div style="margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;"><b>${x.user}</b>: ${x.text} <span style="float:right; color:#fbbf24">${x.rating}★</span></div>`).join('') : "No reviews yet.";
+            } catch(e) { document.getElementById('revList').innerText = "Could not load reviews."; }
         }
 
         async function subRev() {
@@ -282,22 +220,34 @@
             fd.append('review_text', document.getElementById('revText').value);
             await fetch('/submit_review', {method:'POST', body:fd});
             alert("Review Posted!");
-            document.getElementById('reviewModal').style.display='none';
+            closeModal('reviewModal');
         }
 
         async function generateAI() {
             const name = document.getElementById('aName').value;
-            const vibe = document.getElementById('aVibe').value || "Awesome";
             const city = document.getElementById('cityInput').value;
             if(!name) return alert("Enter Name first!");
             const btn = document.querySelector('.ai-btn'); btn.innerText = "🤖 Thinking...";
-            const fd = new FormData(); fd.append('name', name); fd.append('city', city); fd.append('vibe', vibe);
+            const fd = new FormData(); fd.append('name', name); fd.append('city', city);
             try {
                 const r = await fetch('/generate_ai_desc', {method:'POST', body:fd});
                 const d = await r.json();
-                if(d.status === 'success') { document.getElementById('aDesc').value = d.desc; btn.innerText = "✨ Done!"; } 
-                else { alert(d.desc); btn.innerText = "✨ Write with AI"; }
-            } catch(e) { alert("AI Error"); }
+                document.getElementById('aDesc').value = d.desc;
+            } catch(e) { alert("AI Service Busy"); }
+            btn.innerText = "✨ Write with AI";
+        }
+
+        async function findCoords() {
+            const name = document.getElementById('aName').value; 
+            const city = document.getElementById('cityInput').value;
+            if(!name) return alert("Enter name first");
+            const r = await fetch('/geocode', {method:'POST', body:new URLSearchParams({address: name + ", " + city})});
+            const d = await r.json();
+            if(d.status==='success') { 
+                document.getElementById('aLat').value = d.lat; 
+                document.getElementById('aLon').value = d.lon; 
+                alert("GPS Found!");
+            } else alert("Location not found on Map");
         }
 
         async function subPlace() {
@@ -313,19 +263,13 @@
             fd.append('lon', document.getElementById('aLon').value || 0);
             const f = document.getElementById('aFile').files[0]; if(f) fd.append('file', f);
             
-            const r = await fetch('/add_place', {method:'POST', body:fd});
-            const d = await r.json();
-            if(d.status === 'success') { alert("Added!"); document.getElementById('addModal').style.display='none'; fetchData(); } else alert("Error");
+            try {
+                const r = await fetch('/add_place', {method:'POST', body:fd});
+                const d = await r.json();
+                if(d.status === 'success') { alert("Added!"); closeModal('addModal'); fetchData(); }
+            } catch(e) { alert("Error adding spot"); }
         }
 
-        async function findCoords() {
-            const name = document.getElementById('aName').value; const city = document.getElementById('cityInput').value;
-            const r = await fetch('/geocode', {method:'POST', body:new URLSearchParams({address: name + ", " + city})});
-            const d = await r.json();
-            if(d.status==='success') { document.getElementById('aLat').value = d.lat; document.getElementById('aLon').value = d.lon; } else alert("Not found");
-        }
-
-        // --- AUTH & REGISTER LOGIC ---
         function openAuth() { 
             if(token) { localStorage.clear(); location.reload(); } 
             else document.getElementById('authModal').style.display='flex'; 
@@ -336,32 +280,24 @@
             isRegister = !isRegister;
             document.getElementById('authTitle').innerText = isRegister ? "Create Account" : "Welcome Back";
             document.getElementById('authActionBtn').innerText = isRegister ? "REGISTER" : "SIGN IN";
-            document.getElementById('authToggleText').innerText = isRegister ? "Already have an account? Sign In" : "New here? Create an account";
         }
 
         async function doAuth() {
             const u = document.getElementById('uName').value; 
             const p = document.getElementById('uPass').value;
             const endpoint = isRegister ? '/register' : '/login';
-
-            const r = await fetch(endpoint, {
-                method:'POST', 
-                headers:{'Content-Type':'application/json'}, 
-                body:JSON.stringify({username:u, password:p})
-            });
-            const d = await r.json();
-            
-            if(d.status === 'success') { 
-                if(isRegister) {
-                    alert("Account Created! Please Login.");
-                    toggleAuthMode(); 
-                } else {
-                    localStorage.setItem('tok', d.token); 
-                    localStorage.setItem('role', d.role); 
-                    localStorage.setItem('usr', u); 
-                    location.reload(); 
-                }
-            } else { alert(d.message); }
+            try {
+                const r = await fetch(endpoint, {
+                    method:'POST', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({username:u, password:p})
+                });
+                const d = await r.json();
+                if(d.status === 'success') { 
+                    if(isRegister) { alert("Success! Now Login."); toggleAuthMode(); }
+                    else { localStorage.setItem('tok', d.token); localStorage.setItem('role', d.role); localStorage.setItem('usr', u); location.reload(); }
+                } else alert(d.message);
+            } catch(e) { alert("Auth failed"); }
         }
 
         init();
