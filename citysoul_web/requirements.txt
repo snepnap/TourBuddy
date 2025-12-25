@@ -12,3 +12,4 @@ dnspython
 email-validator
 certifi
 cloudinary
+google-generativeai
