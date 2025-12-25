@@ -165,58 +165,69 @@
             fetchData();
         }
 
-        async function fetchData() {
+       async function fetchData() {
             const city = document.getElementById('cityInput').value;
             document.getElementById('heroCity').innerText = city.toUpperCase();
             
             const fd = new FormData(); 
             fd.append('city', city);
-            fd.append('type', curType); // Send active tab type
+            fd.append('type', curType);
             
-            const r = await fetch('/discover_places', {method:'POST', body:fd});
-            const d = await r.json();
-            
-            const g = document.getElementById('grid'); g.innerHTML = '';
-            
-            if(d.items.length === 0) {
-                g.innerHTML = `<p style="text-align:center; width:100%; color:#666;">No ${curType} found in this city yet.</p>`;
-                return;
-            }
+            try {
+                const r = await fetch('/discover_places', {method:'POST', body:fd});
+                const d = await r.json();
+                
+                const g = document.getElementById('grid'); g.innerHTML = '';
+                
+                if(!d.items || d.items.length === 0) {
+                    g.innerHTML = `<p style="text-align:center; width:100%; color:#666;">No ${curType} found in this city yet.</p>`;
+                    return;
+                }
 
-            d.items.forEach(i => {
-                const safeName = i.name.replace(/'/g, "'");
-                const safeDesc = (i.desc || "").replace(/'/g, "'").replace(/"/g, """);
-                const safeImg = i.img || "";
+                d.items.forEach(i => {
+                    // --- SAFETY CHECKS (Prevents Errors) ---
+                    if (!i) return; // Skip if item is null
+                    
+                    // Safe string handling to prevent quote errors
+                    const safeName = (i.name || "Unknown Place").replace(/'/g, "\\'");
+                    const safeDesc = (i.desc || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const safeImg = i.img || "https://placehold.co/600x400/1e293b/ffffff?text=TourBuddy";
+                    const safeDist = i.distance || "N/A";
+                    const safeRate = i.rating || "New";
+                    const safeBudget = i.budget || "N/A";
+                    const safeDuration = i.duration || "1-2 hrs";
+                    const safeVibe = i.vibe || "General";
 
-                g.innerHTML += `
-                    <div class="card">
-                        <div class="vibe-badge">${i.vibe || 'General'}</div>
-                        <img src="${safeImg}" class="card-img">
-                        <div class="card-body">
-                            <h3>${safeName}</h3>
-                            <div class="time-badge">⏳ ${i.duration || '1-2 hrs'}</div>
-                            <div class="time-badge">💰 ${i.budget}</div>
-                            <div class="time-badge">📍 ${i.distance}</div>
-                            <p style="color:#94a3b8; font-size:0.9rem; margin-top:10px; flex:1;">${safeDesc.substring(0, 80)}...</p>
-                            
-                            <div class="btn-group">
-                                <button class="btn-sm" onclick="openDetail('${safeName}', '${safeImg}', '${safeDesc}', '${i.distance}', '${i.rating}')">Info</button>
-                                <button class="btn-sm" onclick="openRev('${i.id}', '${safeName}')">Review</button>
-                                <button class="btn-sm btn-nav" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}')">Nav ↗</button>
+                    g.innerHTML += `
+                        <div class="card">
+                            <div class="vibe-badge">${safeVibe}</div>
+                            <img src="${safeImg}" class="card-img" onerror="this.src='https://placehold.co/600x400?text=Error'">
+                            <div class="card-body">
+                                <h3>${safeName}</h3>
+                                <div class="time-badge">⏳ ${safeDuration}</div>
+                                <div class="time-badge">💰 ${safeBudget}</div>
+                                <div class="time-badge">📍 ${safeDist}</div>
+                                <p style="color:#94a3b8; font-size:0.9rem; margin-top:10px; flex:1;">${safeDesc.substring(0, 80)}...</p>
+                                
+                                <div class="btn-group">
+                                    <button class="btn-sm" onclick="openDetail('${safeName}', '${safeImg}', '${safeDesc}', '${safeDist}', '${safeRate}')">Info</button>
+                                    <button class="btn-sm" onclick="openRev('${i.id}', '${safeName}')">Review</button>
+                                    <button class="btn-sm btn-nav" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}')">Nav ↗</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            });
-            VanillaTilt.init(document.querySelectorAll(".card"));
-        }
+                    `;
+                });
+                
+                // Re-initialize tilt effect for new cards
+                if (typeof VanillaTilt !== 'undefined') {
+                    VanillaTilt.init(document.querySelectorAll(".card"));
+                }
 
-        // --- TAB SWITCHING ---
-        function switchTab(type, btn) {
-            curType = type;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            fetchData();
+            } catch(e) {
+                console.error("Fetch Error:", e);
+                document.getElementById('grid').innerHTML = '<p style="color:red; text-align:center;">Error loading data.</p>';
+            }
         }
 
         // --- DETAILS ---
